@@ -124,7 +124,7 @@ async function runDijkstra(){
       lastPath = path;
       const hlE=[];
       for(let i=0;i<path.length-1;i++){const ei=edgeIndex(path[i],path[i+1]);if(ei>=0) hlE.push(ei);}
-      MapEngine.animate('route-map', hlE, src, dst, ROUTE_OPTS);
+      animatePath(path, 'route-map');
       const chips = path.map(i=>`<span style="display:inline-flex;align-items:center;background:#0A2010;color:#7FD4A8;border:1px solid #2E6B3E;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${NODES[i].l}</span>`).join('<span style="color:#2E6B3E;font-size:12px;margin:0 2px">→</span>');
       document.getElementById('d-path').innerHTML = path.length ? chips : 'No route available';
       document.getElementById('d-dist').textContent=res.data.distance===Infinity?'No connection':res.data.distance+' km';
@@ -141,7 +141,7 @@ async function runDijkstra(){
   const hlE=[];
   for(let i=0;i<res.path.length-1;i++){const ei=edgeIndex(res.path[i],res.path[i+1]);if(ei>=0) hlE.push(ei);}
   // ── Animated route draw (algorithm unchanged above) ────────────
-  MapEngine.animate('route-map', hlE, src, dst, ROUTE_OPTS);
+  animatePath(path, 'route-map');
   // Breadcrumb chips
   const chips = res.path.map(i=>`<span style="display:inline-flex;align-items:center;background:#0A2010;color:#7FD4A8;border:1px solid #2E6B3E;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${NODES[i].l}</span>`).join('<span style="color:#2E6B3E;font-size:12px;margin:0 2px">→</span>');
   document.getElementById('d-path').innerHTML = res.path.length ? chips : 'No route available';
@@ -180,7 +180,7 @@ function toggleBF(){
   const t1=performance.now();
   const hlE=[];
   for(let i=0;i<res.path.length-1;i++){const ei=edgeIndex(res.path[i],res.path[i+1]);if(ei>=0) hlE.push(ei);}
-  MapEngine.animate('route-map', hlE, src, dst, ROUTE_OPTS);
+  animatePath(path, 'route-map');
   el.innerHTML=`<div class="result-box" style="border-left:3px solid #f59e0b;">
     <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px;">⚠ Re-routed due to road closure (${NODES[lastPath[0]].l} – ${NODES[lastPath[1]].l})</div>
     <div class="rr">Alternate Route: <span>${res.path.map(i=>NODES[i].l).join(' → ')||'No route available'}</span></div>
@@ -399,50 +399,201 @@ async function runBFS(){
 
 
 
-function drawSCAEMap(svgId) {
+
+function renderCityMap(nodes, edges, svgId) {
     const svg = document.getElementById(svgId);
     if (!svg) return;
+    
+    const svgWidth = svg.clientWidth || 620;
+    const svgHeight = svg.clientHeight || 520;
+    
+    const xs = nodes.map(n => n.x);
+    const ys = nodes.map(n => n.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    
+    const padding = 40;
+    
+    function scaleX(x) {
+        if(maxX === minX) return svgWidth/2;
+        return padding + ((x - minX) / (maxX - minX)) * (svgWidth - 2 * padding);
+    }
+    function scaleY(y) {
+        if(maxY === minY) return svgHeight/2;
+        return padding + ((y - minY) / (maxY - minY)) * (svgHeight - 2 * padding);
+    }
+    
+    if(!window.nodePositions) window.nodePositions = {};
+    window.nodePositions[svgId] = {};
+    nodes.forEach(n => {
+        window.nodePositions[svgId][n.id] = {
+            x: scaleX(n.x),
+            y: scaleY(n.y),
+            label: n.label || n.l || n.area
+        };
+    });
+    
     svg.innerHTML = '';
-    window.graphEdges.forEach(e => {
-        const u = window.graphNodes.find(n => n.id === e[0] || n.id === e.node_u);
-        const v = window.graphNodes.find(n => n.id === e[1] || n.id === e.node_v);
-        if(!u || !v) return;
+    
+    edges.forEach(edge => {
+        const u = window.nodePositions[svgId][edge[0] !== undefined ? edge[0] : edge.node_u];
+        const v = window.nodePositions[svgId][edge[1] !== undefined ? edge[1] : edge.node_v];
+        if (!u || !v) return;
+        
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', u.x); line.setAttribute('y1', u.y);
-        line.setAttribute('x2', v.x); line.setAttribute('y2', v.y);
-        line.setAttribute('stroke', '#9DB8D2');
-        line.setAttribute('stroke-width', '2');
+        line.setAttribute('x1', u.x);
+        line.setAttribute('y1', u.y);
+        line.setAttribute('x2', v.x);
+        line.setAttribute('y2', v.y);
+        const isClosed = edge.is_closed || false;
+        line.setAttribute('stroke', isClosed ? '#DC2626' : '#9DB8D2');
+        line.setAttribute('stroke-width', isClosed ? '2.5' : '2');
+        if(isClosed) line.setAttribute('stroke-dasharray', '6,4');
+        
+        const nu = edge[0] !== undefined ? edge[0] : edge.node_u;
+        const nv = edge[1] !== undefined ? edge[1] : edge.node_v;
+        const nw = edge[2] !== undefined ? edge[2] : edge.weight;
+        
+        line.setAttribute('id', `${svgId}-edge-${nu}-${nv}`);
+        line.setAttribute('data-u', nu);
+        line.setAttribute('data-v', nv);
+        line.setAttribute('class', 'map-edge');
         svg.appendChild(line);
-
+        
         const midX = (u.x + v.x) / 2;
         const midY = (u.y + v.y) / 2;
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', midX); text.setAttribute('y', midY - 5);
-        text.setAttribute('fill', '#666');
-        text.setAttribute('font-size', '10px');
-        text.setAttribute('text-anchor', 'middle');
-        text.textContent = (e[2] !== undefined ? e[2] : e.weight) + 'km';
-        svg.appendChild(text);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', midX - 10);
+        rect.setAttribute('y', midY - 9);
+        rect.setAttribute('width', 20);
+        rect.setAttribute('height', 16);
+        rect.setAttribute('fill', 'white');
+        rect.setAttribute('stroke', '#C8D4E0');
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('rx', '3');
+        svg.appendChild(rect);
+        
+        const weightText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        weightText.setAttribute('x', midX);
+        weightText.setAttribute('y', midY + 4);
+        weightText.setAttribute('text-anchor', 'middle');
+        weightText.setAttribute('font-size', '10');
+        weightText.setAttribute('fill', '#445566');
+        weightText.setAttribute('font-weight', '600');
+        weightText.textContent = nw;
+        svg.appendChild(weightText);
     });
-
-    window.graphNodes.forEach(n => {
+    
+    nodes.forEach(node => {
+        const pos = window.nodePositions[svgId][node.id];
+        if (!pos) return;
+        
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
-        circle.setAttribute('r', '6');
-        circle.setAttribute('fill', '#fff');
-        circle.setAttribute('stroke', '#003366');
-        circle.setAttribute('stroke-width', '2');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', '14');
+        circle.setAttribute('fill', 'white');
+        circle.setAttribute('stroke', '#2A5C9A');
+        circle.setAttribute('stroke-width', '2.5');
+        circle.setAttribute('id', `${svgId}-node-${node.id}`);
+        circle.setAttribute('data-node-id', node.id);
+        circle.setAttribute('class', 'map-node');
+        circle.style.cursor = 'pointer';
         svg.appendChild(circle);
-
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', n.x); text.setAttribute('y', n.y + 18);
-        text.setAttribute('fill', '#333');
-        text.setAttribute('font-size', '11px');
-        text.setAttribute('font-family', 'Inter, Arial, sans-serif');
-        text.setAttribute('text-anchor', 'middle');
-        text.textContent = n.label || n.l || n.area;
-        svg.appendChild(text);
+        
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', pos.x);
+        label.setAttribute('y', pos.y + 28);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('font-size', '11');
+        label.setAttribute('fill', '#334155');
+        label.setAttribute('font-family', 'Arial, sans-serif');
+        label.setAttribute('font-weight', '500');
+        label.textContent = pos.label;
+        svg.appendChild(label);
     });
+}
+
+function animatePath(pathArray, svgId) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    
+    svg.querySelectorAll('.map-edge').forEach(line => {
+        line.setAttribute('stroke', '#9DB8D2');
+        line.setAttribute('stroke-width', '2');
+        line.classList.remove('path-edge');
+    });
+    
+    svg.querySelectorAll('.map-node').forEach(circle => {
+        circle.setAttribute('fill', 'white');
+        circle.setAttribute('stroke', '#2A5C9A');
+        circle.setAttribute('stroke-width', '2.5');
+        circle.setAttribute('r', '14');
+    });
+    
+    svg.querySelectorAll('.path-label').forEach(el => el.remove());
+    
+    if (!pathArray || pathArray.length < 2) return;
+    
+    for (let i = 0; i < pathArray.length - 1; i++) {
+        const u = pathArray[i];
+        const v = pathArray[i + 1];
+        
+        setTimeout(() => {
+            let edge = document.getElementById(`${svgId}-edge-${u}-${v}`) || 
+                       document.getElementById(`${svgId}-edge-${v}-${u}`);
+            
+            if (edge) {
+                edge.setAttribute('stroke', '#003366');
+                edge.setAttribute('stroke-width', '4');
+                edge.classList.add('path-edge');
+            }
+            
+            const nodeEl = document.getElementById(`${svgId}-node-${v}`);
+            if (nodeEl && i < pathArray.length - 2) {
+                nodeEl.setAttribute('stroke', '#003366');
+                nodeEl.setAttribute('stroke-width', '3');
+            }
+        }, i * 300);
+    }
+    
+    const startNode = document.getElementById(`${svgId}-node-${pathArray[0]}`);
+    if (startNode) {
+        startNode.setAttribute('fill', '#E8F5E9');
+        startNode.setAttribute('stroke', '#2E7D32');
+        startNode.setAttribute('stroke-width', '3');
+        const cx = parseFloat(startNode.getAttribute('cx'));
+        const cy = parseFloat(startNode.getAttribute('cy'));
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', cx);
+        label.setAttribute('y', cy + 5);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('fill', '#2E7D32');
+        label.setAttribute('font-weight', 'bold');
+        label.setAttribute('font-size', '14');
+        label.setAttribute('class', 'path-label');
+        label.textContent = 'A';
+        svg.appendChild(label);
+    }
+    
+    const endNode = document.getElementById(`${svgId}-node-${pathArray[pathArray.length-1]}`);
+    if (endNode) {
+        endNode.setAttribute('fill', '#FFEBEE');
+        endNode.setAttribute('stroke', '#C62828');
+        endNode.setAttribute('stroke-width', '3');
+        const cx = parseFloat(endNode.getAttribute('cx'));
+        const cy = parseFloat(endNode.getAttribute('cy'));
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', cx);
+        label.setAttribute('y', cy + 5);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('fill', '#C62828');
+        label.setAttribute('font-weight', 'bold');
+        label.setAttribute('font-size', '14');
+        label.setAttribute('class', 'path-label');
+        label.textContent = 'B';
+        svg.appendChild(label);
+    }
 }
 
 
@@ -498,6 +649,6 @@ async function loadGraphData() {
     if(loc) { loc.innerHTML=''; NODES.forEach((n,i)=>loc.add(new Option(n.label||n.l, n.label||n.l))); }
     const bs=document.getElementById('bfs-src');
     if(bs) { bs.innerHTML=''; NODES.forEach((n,i)=>bs.add(new Option(n.label||n.l, i))); }
-    drawSCAEMap('route-map');
-    drawSCAEMap('bfs-map');
+    renderCityMap(window.graphNodes, window.graphEdges, 'route-map');
+    renderCityMap(window.graphNodes, window.graphEdges, 'bfs-map');
 }
