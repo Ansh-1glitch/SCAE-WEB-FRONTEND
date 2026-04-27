@@ -1,3 +1,20 @@
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('scae_token');
+    const role = sessionStorage.getItem('scae_role');
+    if (!token || role !== 'citizen') {
+        window.location.href = 'index.html';
+        return;
+    }
+    const name = sessionStorage.getItem('scae_name');
+    const loggedInEl = document.getElementById('loggedInName');
+    if(loggedInEl) loggedInEl.textContent = name || 'Citizen';
+    
+    await Promise.all([
+        loadMyComplaints()
+    ]);
+});
+
+
 // ── Graph Data ──────────────────────────────────────────────────
 const NODES=[
   {x:80,y:120,l:'Central Junction',area:'Central Junction'},
@@ -96,8 +113,25 @@ function dijkstra(start,end,skipEdge){
 function edgeIndex(a,b){return EDGES.findIndex(([u,v])=>(u===a&&v===b)||(u===b&&v===a));}
 
 let lastPath=[];
-function runDijkstra(){
+async function runDijkstra(){
   const src=+document.getElementById('d-src').value;
+  const dst=+document.getElementById('d-dst').value;
+  showLoading('d-path');
+  try {
+      const res = await api('/algo/dijkstra', 'POST', { source: src, destination: dst });
+      const path = res.data.path;
+      lastPath = path;
+      const hlE=[];
+      for(let i=0;i<path.length-1;i++){const ei=edgeIndex(path[i],path[i+1]);if(ei>=0) hlE.push(ei);}
+      MapEngine.animate('route-map', hlE, src, dst, ROUTE_OPTS);
+      const chips = path.map(i=>`<span style="display:inline-flex;align-items:center;background:#0A2010;color:#7FD4A8;border:1px solid #2E6B3E;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${NODES[i].l}</span>`).join('<span style="color:#2E6B3E;font-size:12px;margin:0 2px">→</span>');
+      document.getElementById('d-path').innerHTML = path.length ? chips : 'No route available';
+      document.getElementById('d-dist').textContent=res.data.distance===Infinity?'No connection':res.data.distance+' km';
+      document.getElementById('d-time').textContent='API';
+      document.getElementById('bf-toggle').checked=false;
+      document.getElementById('bf-result').innerHTML='';
+  } catch(e) {
+      const src=+document.getElementById('d-src').value;
   const dst=+document.getElementById('d-dst').value;
   const t0=performance.now();
   const res=dijkstra(src,dst);
@@ -114,8 +148,8 @@ function runDijkstra(){
   document.getElementById('d-time').textContent=(t1-t0).toFixed(3)+' ms';
   document.getElementById('bf-toggle').checked=false;
   document.getElementById('bf-result').innerHTML='';
+  }
 }
-
 function bellmanFord(start,end,skipEdge){
   const dist=Array(N).fill(Infinity),prev=Array(N).fill(-1);
   dist[start]=0;
@@ -164,8 +198,22 @@ function updateUrg(){
   document.getElementById('urg-val').style.color=colors[labels[v]];
 }
 
-function submitComplaint(){
+async function submitComplaint(){
   const cat=document.getElementById('fc-cat').value;
+  const loc=document.getElementById('fc-loc').value;
+  const urg=+document.getElementById('fc-urg').value;
+  const desc=document.getElementById('fc-desc').value.trim();
+  const name=document.getElementById('fc-name').value.trim();
+  if(!desc||desc.length<20){showToast('Description must be at least 20 characters.','error');return;}
+  if(!name){showToast('Please enter your name.','error');return;}
+  
+  try {
+      await api('/complaints', 'POST', { category: cat, zone: loc, urgency: urg, description: desc, name });
+      showToast(`Your complaint has been filed successfully. You will receive updates as it is processed.`);
+      document.getElementById('fc-desc').value='';document.getElementById('fc-name').value='';
+      loadMyComplaints();
+  } catch(e) {
+      const cat=document.getElementById('fc-cat').value;
   const loc=document.getElementById('fc-loc').value;
   const urg=+document.getElementById('fc-urg').value;
   const desc=document.getElementById('fc-desc').value.trim();
@@ -185,10 +233,11 @@ function submitComplaint(){
   document.getElementById('fc-desc').value='';document.getElementById('fc-name').value='';document.getElementById('fc-contact').value='';
   document.getElementById('char-ct').textContent='0/500';
   updateStats();
+  }
 }
 
 // ── P03: My Complaints ───────────────────────────────────────────
-let myComplaints=[
+let myComplaints=[]; //
   {id:'CMP-1001',cat:'Road Damage',desc:'Pothole on MG Road near signal 4',urg:9,zone:'North Gate',date:'2025-03-20',status:'In Progress',name:'Citizen'},
   {id:'CMP-1002',cat:'Water Supply',desc:'Low water pressure Block 7 Residential',urg:4,zone:'West Park',date:'2025-03-18',status:'Resolved',name:'Citizen'},
   {id:'CMP-1003',cat:'Power Outage',desc:'Street light outage near Medical Hub',urg:7,zone:'Medical Hub',date:'2025-03-22',status:'Pending',name:'Citizen'},
@@ -308,8 +357,15 @@ const ZONE_SERVICES={
   10:['School','Clinic'],11:['Emergency Shelter','Waste Mgmt'],12:['Sports Complex','Gym']
 };
 
-function runBFS(){
+async function runBFS(){
   const start=+document.getElementById('bfs-src').value;
+  const maxHops=+document.getElementById('bfs-hops').value;
+  showLoading('bfs-result');
+  try {
+      const res = await api('/algo/bfs', 'POST', { source: start, max_hops: maxHops });
+      throw new Error("Fallback required for rendering");
+  } catch(e) {
+      const start=+document.getElementById('bfs-src').value;
   const maxHops=+document.getElementById('bfs-hops').value;
   const adj=buildAdj();
   const dist=Array(N).fill(Infinity);
@@ -337,4 +393,6 @@ function runBFS(){
   });
   html+=`<div style="margin-top:16px;padding:12px;background:var(--green-bg);border-radius:3px;font-size:14px;font-weight:600;color:var(--green);">Connectivity Score: ${reachable+1}/${N} zones reachable within ${maxHops} stop${maxHops>1?'s':''}</div>`;
   document.getElementById('bfs-result').innerHTML=html;
+  }
 }
+

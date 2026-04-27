@@ -160,12 +160,12 @@ a:hover{text-decoration:underline;}
 <!-- ── QUICK SERVICES ── -->
 <div class="quick-services">
   <div class="qs-grid">
-    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">🗺️</div><div class="qs-label">Route Planner</div></div>
-    <div class="qs-item" onclick="navigate('citizen.html','citizen')"><div class="qs-icon">📋</div><div class="qs-label">File Complaint</div></div>
-    <div class="qs-item" onclick="navigate('citizen.html','citizen')"><div class="qs-icon">🔍</div><div class="qs-label">Track Complaint</div></div>
-    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">💡</div><div class="qs-label">Power Grid</div></div>
-    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">💰</div><div class="qs-label">Budget Info</div></div>
-    <div class="qs-item" onclick="navigate('dept.html','dept')"><div class="qs-icon">🚨</div><div class="qs-label">Emergency</div></div>
+    <div class="qs-item" onclick="loginAs('admin')"><div class="qs-icon">🗺️</div><div class="qs-label">Route Planner</div></div>
+    <div class="qs-item" onclick="loginAs('citizen')"><div class="qs-icon">📋</div><div class="qs-label">File Complaint</div></div>
+    <div class="qs-item" onclick="loginAs('citizen')"><div class="qs-icon">🔍</div><div class="qs-label">Track Complaint</div></div>
+    <div class="qs-item" onclick="loginAs('admin')"><div class="qs-icon">💡</div><div class="qs-label">Power Grid</div></div>
+    <div class="qs-item" onclick="loginAs('admin')"><div class="qs-icon">💰</div><div class="qs-label">Budget Info</div></div>
+    <div class="qs-item" onclick="loginAs('dept')"><div class="qs-icon">🚨</div><div class="qs-label">Emergency</div></div>
   </div>
 </div>
 
@@ -177,33 +177,33 @@ a:hover{text-decoration:underline;}
   </div>
   <div class="cards-grid">
     <!-- Admin -->
-    <div class="role-card" onclick="navigate('admin.html','admin')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('admin.html','admin')">
+    <div class="role-card" onclick="loginAs('admin')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')loginAs('admin')">
       <div class="rc-top orange">ADMINISTRATOR</div>
       <div class="rc-body">
         <div class="rc-icon">🏛️</div>
         <div class="rc-title">City Commissioner</div>
         <div class="rc-desc">Full administrative access to all city management modules including route planning, budget allocation, and infrastructure monitoring.</div>
-        <a class="rc-btn navy" href="admin.html">LOGIN AS ADMIN →</a>
+        <a class="rc-btn navy" href="javascript:void(0)" onclick="loginAs('admin'); event.stopPropagation();">LOGIN AS ADMIN →</a>
       </div>
     </div>
     <!-- Citizen -->
-    <div class="role-card" onclick="navigate('citizen.html','citizen')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('citizen.html','citizen')">
+    <div class="role-card" onclick="loginAs('citizen')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')loginAs('citizen')">
       <div class="rc-top navy">CITIZEN / नागरिक</div>
       <div class="rc-body">
         <div class="rc-icon">👤</div>
         <div class="rc-title">Public User</div>
         <div class="rc-desc">File complaints, find shortest routes, track service requests, and explore city services in your zone.</div>
-        <a class="rc-btn orange" href="citizen.html">LOGIN AS CITIZEN →</a>
+        <a class="rc-btn orange" href="javascript:void(0)" onclick="loginAs('citizen'); event.stopPropagation();">LOGIN AS CITIZEN →</a>
       </div>
     </div>
     <!-- Department -->
-    <div class="role-card" onclick="navigate('dept.html','dept')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('dept.html','dept')">
+    <div class="role-card" onclick="loginAs('dept')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')loginAs('dept')">
       <div class="rc-top green">DEPARTMENT OPERATOR</div>
       <div class="rc-body">
         <div class="rc-icon">🏢</div>
         <div class="rc-title">Dept. Staff</div>
         <div class="rc-desc">Manage work orders, maintenance schedules, supply logistics, and emergency dispatch operations.</div>
-        <a class="rc-btn green" href="dept.html">LOGIN AS DEPT. STAFF →</a>
+        <a class="rc-btn green" href="javascript:void(0)" onclick="loginAs('dept'); event.stopPropagation();">LOGIN AS DEPT. STAFF →</a>
       </div>
     </div>
   </div>
@@ -215,7 +215,7 @@ a:hover{text-decoration:underline;}
     <h2>📢 Important Notices</h2>
     <div class="underline"></div>
   </div>
-  <div class="notices-box">
+  <div class="notices-box" id="noticesContainer">
     <div class="notices-header">📢 Latest Updates & Announcements</div>
     <div class="notice-item"><span>New: Online complaint filing now available for all city zones</span><span class="notice-date">07 Apr 2025</span><a class="notice-link" href="citizen.html">Read More →</a></div>
     <div class="notice-item"><span>Maintenance scheduled for Industrial Zone power grid — 15 April 2025</span><span class="notice-date">05 Apr 2025</span><a class="notice-link" href="#">Read More →</a></div>
@@ -226,10 +226,10 @@ a:hover{text-decoration:underline;}
 
 <!-- ── STATS STRIP ── -->
 <div class="stats-strip">
-  <div class="stat-box"><div class="stat-num">11,240+</div><div class="stat-label">Complaints Resolved</div></div>
-  <div class="stat-box"><div class="stat-num">13</div><div class="stat-label">City Zones Covered</div></div>
-  <div class="stat-box"><div class="stat-num">47</div><div class="stat-label">Active Work Orders</div></div>
-  <div class="stat-box"><div class="stat-num">52,000+</div><div class="stat-label">Citizens Registered</div></div>
+  <div class="stat-box"><div class="stat-num" id="statComplaints">11,240+</div><div class="stat-label">Complaints Resolved</div></div>
+  <div class="stat-box"><div class="stat-num" id="statZones">13</div><div class="stat-label">City Zones Covered</div></div>
+  <div class="stat-box"><div class="stat-num" id="statOrders">47</div><div class="stat-label">Active Work Orders</div></div>
+  <div class="stat-box"><div class="stat-num" id="statCitizens">52,000+</div><div class="stat-label">Citizens Registered</div></div>
 </div>
 
 <!-- ── FOOTER ── -->
@@ -267,6 +267,8 @@ a:hover{text-decoration:underline;}
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
 <script>
 // Date display
 (function(){
@@ -276,7 +278,64 @@ a:hover{text-decoration:underline;}
   const el=document.getElementById('header-date');
   if(el) el.textContent=days[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+d.getFullYear()+' | '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
 })();
-function navigate(page,role){sessionStorage.setItem('scae_role',role);window.location.href=page;}
+
+async function loadHomeStats() {
+    try {
+        const res = await api('/stats/summary');
+        if(res && res.data) {
+            document.getElementById('statComplaints').textContent = res.data.complaints_resolved.toLocaleString() + '+';
+            document.getElementById('statZones').textContent = res.data.zones_covered;
+            document.getElementById('statOrders').textContent = res.data.active_work_orders;
+            document.getElementById('statCitizens').textContent = res.data.citizens_registered.toLocaleString() + '+';
+        }
+    } catch(e) {
+        // keep hardcoded fallback values
+    }
+}
+
+async function loadNotices() {
+    try {
+        const res = await api('/notices');
+        if(res && res.data) {
+            const container = document.getElementById('noticesContainer');
+            container.innerHTML = '<div class="notices-header">📢 Latest Updates & Announcements</div>' + res.data.map(n => `
+                <div class="notice-item">
+                    <span>${n.title}</span>
+                    <span class="notice-date">${n.date}</span>
+                    <a class="notice-link" href="#">Read More →</a>
+                </div>
+            `).join('');
+        }
+    } catch(e) {
+        // keep hardcoded notices
+    }
+}
+
+async function loginAs(role) {
+    const emailMap = {
+        admin: 'admin@scae.gov.in',
+        citizen: 'citizen@scae.gov.in',
+        dept: 'dept@scae.gov.in'
+    };
+    try {
+        const res = await api('/auth/login', 'POST', {
+            email: emailMap[role],
+            password: 'scae123'
+        });
+        sessionStorage.setItem('scae_token', res.data.token);
+        sessionStorage.setItem('scae_role', res.data.role);
+        sessionStorage.setItem('scae_name', res.data.name);
+        sessionStorage.setItem('scae_email', res.data.email);
+        window.location.href = role + '.html';
+    } catch(e) {
+        alert('Login failed. Please try again.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadHomeStats();
+    loadNotices();
+});
 </script>
 </body>
 </html>

@@ -1,3 +1,21 @@
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('scae_token');
+    const role = sessionStorage.getItem('scae_role');
+    if (!token || (role !== 'dept' && role !== 'admin')) {
+        window.location.href = 'index.html';
+        return;
+    }
+    const name = sessionStorage.getItem('scae_name');
+    const loggedInEl = document.getElementById('loggedInName');
+    if(loggedInEl) loggedInEl.textContent = name || 'Dept Operator';
+    
+    await Promise.all([
+        // loadWorkOrders(),
+        // loadEmergencies()
+    ]);
+});
+
+
 // ── Shared ────────────────────────────────────────────────────────
 const ZONES=['Central Junction','North Gate','City Hall','East Market','West Park','Downtown','South Bridge','River Road','Industrial Zone','Medical Hub','Tech District','Old Town','Sports Complex'];
 const PANEL_LABELS={p01:'Work Order Queue',p02:'Schedule Jobs',p03:'Activity Planner',p04:'Resource Allocator',p05:'Emergency Dispatch',p06:'Sensor Data Logging',p07:'Operations Optimization'};

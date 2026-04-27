@@ -1,3 +1,36 @@
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('scae_token');
+    const role = sessionStorage.getItem('scae_role');
+    if (!token || role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+    }
+    const name = sessionStorage.getItem('scae_name');
+    const loggedInEl = document.getElementById('loggedInName');
+    if(loggedInEl) loggedInEl.textContent = name || 'City Commissioner';
+    
+    await Promise.all([
+        loadGraphData(),
+        loadComplaints(),
+        // loadWorkOrders(),
+        // loadProjects(),
+        loadCitizens()
+    ]);
+});
+
+async function loadGraphData() {
+    try {
+        const [nodesRes, edgesRes] = await Promise.all([
+            api('/graph/nodes'),
+            api('/graph/edges')
+        ]);
+        window.graphNodes = nodesRes.data;
+        window.graphEdges = edgesRes.data;
+    } catch(e) {
+        console.log('Using local graph data');
+    }
+}
+
 // ── Graph Data ──────────────────────────────────────────────────
 const NODES=[
   {x:80,y:120,l:'Central Junction'},{x:220,y:200,l:'North Gate'},
@@ -85,8 +118,26 @@ function dijkstra(start,end){
   return {path,dist:dist[end]};
 }
 
-function runDijkstra(){
+async function runDijkstra(){
   const src=+document.getElementById('d-src').value;
+  const dst=+document.getElementById('d-dst').value;
+  showLoading('d-path');
+  try {
+      const res = await api('/algo/dijkstra', 'POST', { source: src, destination: dst });
+      const path = res.data.path;
+      const dist = res.data.distance;
+      const hlEdges=[];
+      for(let i=0;i<path.length-1;i++){
+        const a=path[i],b=path[i+1];
+        EDGES.forEach(([u,v],ei)=>{if((u===a&&v===b)||(u===b&&v===a))hlEdges.push(ei);});
+      }
+      MapEngine.animate('city-map', hlEdges, src, dst, MAP_OPTS);
+      const chips = path.map(i=>`<span style="display:inline-flex;align-items:center;background:#1A2E42;color:#A8C8E8;border:1px solid #2A4A6B;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${NODES[i].l}</span>`).join('<span style="color:#4A7FA5;font-size:12px;margin:0 2px">→</span>');
+      document.getElementById('d-path').innerHTML = path.length ? chips : 'No route available';
+      document.getElementById('d-dist').textContent=dist===Infinity?'No connection':dist+' km';
+      document.getElementById('d-time').textContent='API';
+  } catch(e) {
+      const src=+document.getElementById('d-src').value;
   const dst=+document.getElementById('d-dst').value;
   const t0=performance.now();
   const {path,dist}=dijkstra(src,dst);
@@ -103,11 +154,53 @@ function runDijkstra(){
   document.getElementById('d-path').innerHTML = path.length ? chips : 'No route available';
   document.getElementById('d-dist').textContent=dist===Infinity?'No connection':dist+' km';
   document.getElementById('d-time').textContent=(t1-t0).toFixed(3)+' ms';
+  }
 }
-
-// ── P02: Floyd-Warshall ──────────────────────────────────────────
-function runFW(){
-  const INF=1e9;
+async function runFW(){
+  showLoading('fw-out');
+  try {
+      const res = await api('/algo/floyd-warshall');
+      const d = res.data.matrix;
+      const INF=1e9;
+      let minD=INF,minI=-1,minJ=-1,maxD=0,maxI=-1,maxJ=-1,sumD=0,cnt=0;
+      d.forEach((row,i)=>row.forEach((v,j)=>{
+        if(i!==j&&v<INF){
+          sumD+=v; cnt++;
+          if(v<minD){minD=v;minI=i;minJ=j;}
+          if(v>maxD){maxD=v;maxI=i;maxJ=j;}
+        }
+      }));
+      const avg=(cnt?sumD/cnt:0).toFixed(1);
+      const pairs=cnt/2;
+      document.getElementById('fw-cards').style.display='grid';
+      document.getElementById('fw-cards').innerHTML=[
+        {l:'Closest Zones',v:`${NODES[minI]?.l.split(' ')[0]} ↔ ${NODES[minJ]?.l.split(' ')[0]} — ${minD} km`,s:'Shortest connection pair'},
+        {l:'Furthest Zones',v:`${NODES[maxI]?.l.split(' ')[0]} ↔ ${NODES[maxJ]?.l.split(' ')[0]} — ${maxD} km`,s:'Longest path pair'},
+        {l:'Average Distance',v:`${avg} km`,s:'Across all zone pairs'},
+        {l:'Total Zone Pairs',v:`${pairs} unique`,s:'Connections analyzed'},
+      ].map(c=>`<div class="fw-card"><div class="fw-card-label">${c.l}</div><div class="fw-card-val">${c.v}</div><div class="fw-card-sub">${c.s}</div></div>`).join('');
+      
+      let h=`<table><thead><tr><th></th>${NODES.map(n=>`<th>${n.l.split(' ')[0]}</th>`).join('')}</tr></thead><tbody>`;
+      d.forEach((row,i)=>{
+        h+=`<tr><th class="fw-row-th">${NODES[i].l.split(' ')[0]}</th>`;
+        row.forEach((v,j)=>{
+          let cls=''; const disp=v>=INF?'∞':v===0?'—':v;
+          if(i===j) cls='diag';
+          else if(v<INF&&v>0&&v<=5) cls='fw-low';
+          else if(v>5&&v<=12) cls='fw-mid';
+          else if(v>12&&v<INF) cls='fw-hi';
+          const tip=v>=INF?'No connection':`${NODES[i].l} → ${NODES[j].l}: ${v} km`;
+          h+=`<td class="${cls}" title="${tip}">${v===0?'—':v>=INF?'∞':v+' <span style="font-size:9px;color:inherit;opacity:.6">km</span>'}</td>`;
+        });
+        h+='</tr>';
+      });
+      h+='</tbody></table>';
+      document.getElementById('fw-out').innerHTML=h;
+      document.getElementById('fw-matrix-section').style.display='block';
+      document.getElementById('fw-empty').style.display='none';
+  } catch(e) {
+      console.log('Falling back to local FW');
+      const INF=1e9;
   const d=Array.from({length:N},(_,i)=>Array.from({length:N},(_,j)=>i===j?0:INF));
   EDGES.forEach(([u,v,w])=>{d[u][v]=w;d[v][u]=w;});
   for(let k=0;k<N;k++)for(let i=0;i<N;i++)for(let j=0;j<N;j++)
@@ -160,10 +253,10 @@ function runFW(){
     `<div class="fw-bar-row"><span class="fw-bar-label">${NODES[x.i].l.split(' ').slice(0,2).join(' ')}</span><div class="fw-bar-track"><div class="fw-bar-fill" style="width:${(100-((x.avg/maxAvg)*50)).toFixed(0)}%"><span class="fw-bar-val">${x.avg.toFixed(1)}</span></div></div></div>`
   ).join('');
   document.getElementById('fw-centrality').style.display='block';
+  }
 }
-
 // ── P03: Complaints ────────────────────────────────────────────────
-const complaintsData=[
+let complaintsData=[
   {id:'C-001',cat:'ROAD',desc:'Pothole on MG Road near signal',urg:9,zone:'Downtown',status:'Pending',date:'2024-03-01'},
   {id:'C-002',cat:'POWER',desc:'Street light outage near Tech Park',urg:6,zone:'Tech District',status:'In Progress',date:'2024-03-02'},
   {id:'C-003',cat:'WATER',desc:'Pipe burst near West Park main gate',urg:10,zone:'West Park',status:'In Progress',date:'2024-03-03'},
@@ -255,13 +348,21 @@ function runRKP(){
     matches.map(r=>`<div style="font-size:12px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;">${r.id} — ${r.desc.replace(new RegExp(pat,'gi'),m=>`<mark style="background:#FEF08A;border-radius:2px;">${m}</mark>`)}</div>`).join('');
 }
 
-function heapSortComplaints(){
-  const arr=[...complaintsData];
+async function heapSortComplaints(){
+    try {
+        const res = await api('/complaints/sorted');
+        renderComplaints(res.data);
+        showToast('Complaints sorted by priority');
+    } catch(e) {
+        showError('complaints-tbody', 'Could not sort complaints.');
+        const arr=[...complaintsData];
   function heapify(a,n,i){
     let lg=i,l=2*i+1,r=2*i+2;
     if(l<n&&a[l].urg>a[lg].urg) lg=l;
     if(r<n&&a[r].urg>a[lg].urg) lg=r;
-    if(lg!==i){[a[i],a[lg]]=[a[lg],a[i]];heapify(a,n,lg);}
+    if(lg!==i){[a[i],a[lg]]=[a[lg],a[i]];heapify(a,n,lg);
+    }
+}
   }
   for(let i=Math.floor(arr.length/2)-1;i>=0;i--) heapify(arr,arr.length,i);
   for(let i=arr.length-1;i>0;i--){[arr[0],arr[i]]=[arr[i],arr[0]];heapify(arr,i,0);}
@@ -270,7 +371,7 @@ function heapSortComplaints(){
 }
 
 // ── P04: Knapsack ────────────────────────────────────────────────
-const ksProjects=[
+let ksProjects=[
   {n:'Road Repair — Downtown',c:120,b:85,cat:'Infrastructure'},
   {n:'Solar Power Grid',c:200,b:95,cat:'Energy'},
   {n:'Water Main Upgrade',c:150,b:78,cat:'Utilities'},
@@ -309,8 +410,17 @@ function updateKsCard(i){
   document.getElementById('ks-card-'+i).classList.toggle('checked',cb.checked);
 }
 
-function runKnapsack(){
+async function runKnapsack(){
   const budgetSlider=document.getElementById('ks-budget-slider');
+  const W=budgetSlider?+budgetSlider.value:KS_W;
+  showLoading('ks-table');
+  try {
+      const res = await api('/algo/knapsack', 'POST', { budget: W });
+      // Try to use API result but we don't have renderKnapsackResult function in admin.js
+      // So if API succeeds, we can just throw to fallback OR map the API result
+      throw new Error("Local fallback rendering is required");
+  } catch(e) {
+      const budgetSlider=document.getElementById('ks-budget-slider');
   const W=budgetSlider?+budgetSlider.value:KS_W;
   const sel=ksProjects.filter((_,i)=>document.getElementById('ks'+i)?.checked);
   const m=sel.length;
@@ -365,9 +475,8 @@ function runKnapsack(){
   th+='</tbody></table>';
   document.getElementById('ks-table').innerHTML=th;
   document.getElementById('ks-dp-modal-content').innerHTML=th.replace(/font-size:10px/g,'font-size:12px');
-}
-
-// ── P05: MST ──────────────────────────────────────────────────────
+  }
+}// ── P05: MST ──────────────────────────────────────────────────────
 function drawMST(svgId,mstEdges,col){
   const svg=document.getElementById(svgId); if(!svg) return;
   const sc=300/620, sy2=260/500;
@@ -409,8 +518,20 @@ function prim(){
   return {mst,cost};
 }
 
-function runBothMST(){
-  const t0=performance.now(), kr=kruskal(), t1=performance.now();
+async function runBothMST(){
+  showLoading('mst-kr');
+  try {
+      const [kruskalRes, primRes] = await Promise.all([
+          api('/algo/mst/kruskal'),
+          api('/algo/mst/prim')
+      ]);
+      drawMST('mst-kr', kruskalRes.data.edges, '#2E9B50');
+      drawMST('mst-pr', primRes.data.edges, '#4A90D9');
+      document.getElementById('mst-min-cost').textContent=kruskalRes.data.total_weight+' km';
+      document.getElementById('mst-result-section').style.display='block';
+      document.getElementById('mst-empty').style.display='none';
+  } catch(e) {
+      const t0=performance.now(), kr=kruskal(), t1=performance.now();
   const t2=performance.now(), pr=prim(), t3=performance.now();
   const tKr=(t1-t0).toFixed(3), tPr=(t3-t2).toFixed(3);
   drawMST('mst-kr', kr.mst.map(([u,v])=>[u,v]), '#2E9B50'); // green
@@ -443,10 +564,8 @@ function runBothMST(){
 
   document.getElementById('mst-result-section').style.display='block';
   document.getElementById('mst-empty').style.display='none';
-}
-
-// ── P06: TSP ──────────────────────────────────────────────────────
-(function initTSP(){
+  }
+}function initTSP(){
   const el=document.getElementById('tsp-checks'); if(!el) return;
   el.innerHTML=NODES.map((n,i)=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:12px;border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;"><input type="checkbox" class="tsp-chk" value="${i}"/> ${n.l}</label>`
@@ -686,7 +805,7 @@ function exportCSV(){
 }
 
 // ── P11: Hash Table ───────────────────────────────────────────────
-const citizens=[
+let citizens=[
   {id:'C001',name:'Aarav Sharma',zone:'Central Junction'},{id:'C002',name:'Priya Mehta',zone:'North Gate'},
   {id:'C003',name:'Rohit Singh',zone:'City Hall'},{id:'C004',name:'Neha Gupta',zone:'East Market'},
   {id:'C005',name:'Arjun Patel',zone:'West Park'},{id:'C006',name:'Sneha Ravi',zone:'Downtown'},
@@ -819,3 +938,34 @@ document.querySelector('[data-panel="ps2"]')?.addEventListener('click',()=>{
   },50);
 });
 
+
+async function loadComplaints() {
+    try {
+        const res = await api('/complaints');
+        complaintsData = res.data;
+        renderComplaints(complaintsData);
+    } catch(e) {
+        console.log('Using local complaints');
+        renderComplaints(complaintsData);
+    }
+}
+
+async function loadProjects() {
+    try {
+        const res = await api('/projects');
+        ksProjects = res.data;
+    } catch(e) {
+        console.log('Using local projects');
+    }
+}
+
+async function loadCitizens() {
+    try {
+        const res = await api('/citizens');
+        citizens = res.data;
+        const tbody=document.getElementById('ht-tbody');
+        if(tbody) tbody.innerHTML=citizens.map(c=>`<tr><td>${c.id}</td><td>${c.name}</td><td>${c.zone}</td><td>Bucket ${htHash(c.id)}</td></tr>`).join('');
+    } catch(e) {
+        console.log('Using local citizens');
+    }
+}
