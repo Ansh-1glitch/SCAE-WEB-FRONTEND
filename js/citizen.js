@@ -1,3 +1,26 @@
+// ── P03: Load My Complaints from API ────────────────────────────────
+async function loadMyComplaints() {
+    try {
+        const res = await api('/complaints');
+        myComplaints = res.data.map(c => ({
+            id:     c.id,
+            cat:    c.category  || c.cat  || 'ROAD',
+            desc:   c.description || c.desc || '',
+            urg:    c.urgency   || c.urg  || 5,
+            zone:   c.zone      || '',
+            status: c.status    || 'Pending',
+            date:   c.date_filed || c.date || '2026-01-01',
+            name:   c.name      || 'Citizen'
+        }));
+        renderMC();
+        updateStats();
+    } catch(e) {
+        console.log('Using local complaint data');
+        renderMC();
+        updateStats();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = sessionStorage.getItem('scae_token');
     const role = sessionStorage.getItem('scae_role');
@@ -142,9 +165,10 @@ async function runDijkstra(){
   const hlE=[];
   for(let i=0;i<res.path.length-1;i++){const ei=edgeIndex(res.path[i],res.path[i+1]);if(ei>=0) hlE.push(ei);}
   // ── Animated route draw (algorithm unchanged above) ────────────
-  animatePath(path, 'route-map');
+  animatePath(res.path, 'route-map');
   // Breadcrumb chips
-  const chips = res.path.map(i=>`<span style="display:inline-flex;align-items:center;background:#0A2010;color:#7FD4A8;border:1px solid #2E6B3E;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${NODES[i].l}</span>`).join('<span style="color:#2E6B3E;font-size:12px;margin:0 2px">→</span>');
+  const labels = res.path.map(i => (NODES[i]?.area || NODES[i]?.label || NODES[i]?.l || 'Node ' + i));
+  const chips = labels.map(l=>`<span style="display:inline-flex;align-items:center;background:#0A2010;color:#7FD4A8;border:1px solid #2E6B3E;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${l}</span>`).join('<span style="color:#2E6B3E;font-size:12px;margin:0 2px">→</span>');
   document.getElementById('d-path').innerHTML = res.path.length ? chips : 'No route available';
   document.getElementById('d-dist').textContent=res.dist===Infinity?'No connection':res.dist+' km';
   document.getElementById('d-time').textContent=(t1-t0).toFixed(3)+' ms';
@@ -181,7 +205,7 @@ function toggleBF(){
   const t1=performance.now();
   const hlE=[];
   for(let i=0;i<res.path.length-1;i++){const ei=edgeIndex(res.path[i],res.path[i+1]);if(ei>=0) hlE.push(ei);}
-  animatePath(path, 'route-map');
+  animatePath(res.path, 'route-map');
   el.innerHTML=`<div class="result-box" style="border-left:3px solid #f59e0b;">
     <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px;">⚠ Re-routed due to road closure (${NODES[lastPath[0]].l} – ${NODES[lastPath[1]].l})</div>
     <div class="rr">Alternate Route: <span>${res.path.map(i=>NODES[i].l).join(' → ')||'No route available'}</span></div>
@@ -210,31 +234,30 @@ async function submitComplaint(){
   if(!name){showToast('Please enter your name.','error');return;}
   
   try {
-      await api('/complaints', 'POST', { category: cat, zone: loc, urgency: urg, description: desc, name });
-      showToast(`Your complaint has been filed successfully. You will receive updates as it is processed.`);
-      document.getElementById('fc-desc').value='';document.getElementById('fc-name').value='';
-      loadMyComplaints();
+      const res = await api('/complaints', 'POST', { category: cat, zone: loc, urgency: urg, description: desc, name });
+      const refId = res?.data?.id || res?.data?.complaint_id || ('CMP-' + String(Math.floor(Math.random()*9000+1000)));
+      showToast(`Complaint filed. Reference: ${refId}. You will receive updates as it is processed.`);
+      document.getElementById('fc-desc').value = '';
+      document.getElementById('fc-name').value = '';
+      if(document.getElementById('fc-contact')) document.getElementById('fc-contact').value = '';
+      if(document.getElementById('char-ct')) document.getElementById('char-ct').textContent = '0/500';
+      await loadMyComplaints();
   } catch(e) {
-      const cat=document.getElementById('fc-cat').value;
-  const loc=document.getElementById('fc-loc').value;
-  const urg=+document.getElementById('fc-urg').value;
-  const desc=document.getElementById('fc-desc').value.trim();
-  const name=document.getElementById('fc-name').value.trim();
-  if(!desc||desc.length<20){showToast('Description must be at least 20 characters.','error');return;}
-  if(!name){showToast('Please enter your name.','error');return;}
-  const id='CMP-'+String(Math.floor(Math.random()*9000+1000));
-  const now=new Date();
-  const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  myComplaints.push({id,cat,desc,urg,zone:loc,date:dateStr,status:'Pending',name});
-  for(let i=myComplaints.length-1;i>0;i--){
-    if(myComplaints[i].urg>myComplaints[i-1].urg)[myComplaints[i],myComplaints[i-1]]=[myComplaints[i-1],myComplaints[i]];
-    else break;
-  }
-  renderMC();
-  showToast(`Your complaint has been filed successfully. Reference number: ${id}. You will receive updates as it is processed.`);
-  document.getElementById('fc-desc').value='';document.getElementById('fc-name').value='';document.getElementById('fc-contact').value='';
-  document.getElementById('char-ct').textContent='0/500';
-  updateStats();
+      const id = 'CMP-' + String(Math.floor(Math.random()*9000+1000));
+      const now = new Date();
+      const dateStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+      myComplaints.push({id, cat, desc, urg, zone: loc, date: dateStr, status: 'Pending', name});
+      for(let i=myComplaints.length-1;i>0;i--){
+          if(myComplaints[i].urg>myComplaints[i-1].urg) [myComplaints[i],myComplaints[i-1]]=[myComplaints[i-1],myComplaints[i]];
+          else break;
+      }
+      renderMC();
+      showToast(`Complaint filed (offline). Reference: ${id}.`);
+      document.getElementById('fc-desc').value = '';
+      document.getElementById('fc-name').value = '';
+      if(document.getElementById('fc-contact')) document.getElementById('fc-contact').value = '';
+      if(document.getElementById('char-ct')) document.getElementById('char-ct').textContent = '0/500';
+      updateStats();
   }
 }
 
@@ -571,8 +594,7 @@ function animatePath(pathArray, svgId) {
 
 async function loadGraphData() {
     try {
-        const [nodesRes, edgesRes] = showPanel('p01');
-    await Promise.all([
+        const [nodesRes, edgesRes] = await Promise.all([
             api('/graph/nodes'),
             api('/graph/edges')
         ]);

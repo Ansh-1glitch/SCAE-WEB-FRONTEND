@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadGraphData() {
     try {
-        const [nodesRes, edgesRes] = showPanel('p01');
-    await Promise.all([
+        const [nodesRes, edgesRes] = await Promise.all([
             api('/graph/nodes'),
             api('/graph/edges')
         ]);
@@ -192,8 +191,8 @@ async function runDijkstra(){
   // ── Premium animated route draw (algorithm logic unchanged above) ──
   animatePath(path, 'city-map');
   // Show breadcrumb chips in result box
-  const labels = res.data.path_labels || path.map(i=>NODES[i].label);
-      const chips = labels.map(l=>`<span style="display:inline-flex;align-items:center;background:#1A2E42;color:#A8C8E8;border:1px solid #2A4A6B;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${l}</span>`).join('<span style="color:#4A7FA5;font-size:12px;margin:0 2px"> </span>');
+  const labels = path.map(i => (NODES[i]?.label || NODES[i]?.l || 'Node ' + i));
+  const chips = labels.map(l=>`<span style="display:inline-flex;align-items:center;background:#1A2E42;color:#A8C8E8;border:1px solid #2A4A6B;border-radius:14px;padding:2px 10px;font-size:11px;font-family:'Inter',sans-serif;margin:2px 1px">${l}</span>`).join('<span style="color:#4A7FA5;font-size:12px;margin:0 2px"> </span>');
   document.getElementById('d-path').innerHTML = path.length ? chips : 'No route available';
   document.getElementById('d-dist').textContent=dist===Infinity?'No connection':dist+' km';
   document.getElementById('d-time').textContent=(t1-t0).toFixed(3)+' ms';
@@ -217,22 +216,22 @@ async function runFW(){
       const pairs=cnt/2;
       document.getElementById('fw-cards').style.display='grid';
       document.getElementById('fw-cards').innerHTML=[
-        {l:'Closest Zones',v:`${NODES[minI]?.l.split(' ')[0]} ↔ ${NODES[minJ]?.l.split(' ')[0]} — ${minD} km`,s:'Shortest connection pair'},
-        {l:'Furthest Zones',v:`${NODES[maxI]?.l.split(' ')[0]} ↔ ${NODES[maxJ]?.l.split(' ')[0]} — ${maxD} km`,s:'Longest path pair'},
+        {l:'Closest Zones',v:`${(NODES[minI]?.label||NODES[minI]?.l||'?').split(' ')[0]} ↔ ${(NODES[minJ]?.label||NODES[minJ]?.l||'?').split(' ')[0]} — ${minD} km`,s:'Shortest connection pair'},
+        {l:'Furthest Zones',v:`${(NODES[maxI]?.label||NODES[maxI]?.l||'?').split(' ')[0]} ↔ ${(NODES[maxJ]?.label||NODES[maxJ]?.l||'?').split(' ')[0]} — ${maxD} km`,s:'Longest path pair'},
         {l:'Average Distance',v:`${avg} km`,s:'Across all zone pairs'},
         {l:'Total Zone Pairs',v:`${pairs} unique`,s:'Connections analyzed'},
       ].map(c=>`<div class="fw-card"><div class="fw-card-label">${c.l}</div><div class="fw-card-val">${c.v}</div><div class="fw-card-sub">${c.s}</div></div>`).join('');
       
-      let h=`<table><thead><tr><th></th>${NODES.map(n=>`<th>${n.l.split(' ')[0]}</th>`).join('')}</tr></thead><tbody>`;
+      let h=`<table><thead><tr><th></th>${NODES.map(n=>`<th>${(n.label||n.l||'?').split(' ')[0]}</th>`).join('')}</tr></thead><tbody>`;
       d.forEach((row,i)=>{
-        h+=`<tr><th class="fw-row-th">${NODES[i].l.split(' ')[0]}</th>`;
+        h+=`<tr><th class="fw-row-th">${(NODES[i].label||NODES[i].l||'?').split(' ')[0]}</th>`;
         row.forEach((v,j)=>{
           let cls=''; const disp=v>=INF?'∞':v===0?'—':v;
           if(i===j) cls='diag';
           else if(v<INF&&v>0&&v<=5) cls='fw-low';
           else if(v>5&&v<=12) cls='fw-mid';
           else if(v>12&&v<INF) cls='fw-hi';
-          const tip=v>=INF?'No connection':`${NODES[i].l} → ${NODES[j].l}: ${v} km`;
+          const tip=v>=INF?'No connection':`${(NODES[i].label||NODES[i].l||'?')} → ${(NODES[j].label||NODES[j].l||'?')}: ${v} km`;
           h+=`<td class="${cls}" title="${tip}">${v===0?'—':v>=INF?'∞':v+' <span style="font-size:9px;color:inherit;opacity:.6">km</span>'}</td>`;
         });
         h+='</tr>';
@@ -262,23 +261,23 @@ async function runFW(){
   const pairs=cnt/2;
   document.getElementById('fw-cards').style.display='grid';
   document.getElementById('fw-cards').innerHTML=[
-    {l:'Closest Zones',v:`${NODES[minI]?.l.split(' ')[0]} ↔ ${NODES[minJ]?.l.split(' ')[0]} — ${minD} km`,s:'Shortest connection pair'},
-    {l:'Furthest Zones',v:`${NODES[maxI]?.l.split(' ')[0]} ↔ ${NODES[maxJ]?.l.split(' ')[0]} — ${maxD} km`,s:'Longest path pair'},
+    {l:'Closest Zones',v:`${(NODES[minI]?.label||NODES[minI]?.l||'?').split(' ')[0]} ↔ ${(NODES[minJ]?.label||NODES[minJ]?.l||'?').split(' ')[0]} — ${minD} km`,s:'Shortest connection pair'},
+    {l:'Furthest Zones',v:`${(NODES[maxI]?.label||NODES[maxI]?.l||'?').split(' ')[0]} ↔ ${(NODES[maxJ]?.label||NODES[maxJ]?.l||'?').split(' ')[0]} — ${maxD} km`,s:'Longest path pair'},
     {l:'Average Distance',v:`${avg} km`,s:'Across all zone pairs'},
     {l:'Total Zone Pairs',v:`${pairs} unique`,s:'Connections analyzed'},
   ].map(c=>`<div class="fw-card"><div class="fw-card-label">${c.l}</div><div class="fw-card-val">${c.v}</div><div class="fw-card-sub">${c.s}</div></div>`).join('');
 
   // ── Matrix table ──────────────────────────────────────────
-  let h=`<table><thead><tr><th></th>${NODES.map(n=>`<th>${n.l.split(' ')[0]}</th>`).join('')}</tr></thead><tbody>`;
+  let h=`<table><thead><tr><th></th>${NODES.map(n=>`<th>${(n.label||n.l||'?').split(' ')[0]}</th>`).join('')}</tr></thead><tbody>`;
   d.forEach((row,i)=>{
-    h+=`<tr><th class="fw-row-th">${NODES[i].l.split(' ')[0]}</th>`;
+    h+=`<tr><th class="fw-row-th">${(NODES[i].label||NODES[i].l||'?').split(' ')[0]}</th>`;
     row.forEach((v,j)=>{
       let cls=''; const disp=v>=INF?'∞':v===0?'—':v;
       if(i===j) cls='diag';
       else if(v<INF&&v>0&&v<=5) cls='fw-low';
       else if(v>5&&v<=12) cls='fw-mid';
       else if(v>12&&v<INF) cls='fw-hi';
-      const tip=v>=INF?'No connection':`${NODES[i].l} → ${NODES[j].l}: ${v} km`;
+      const tip=v>=INF?'No connection':`${(NODES[i].label||NODES[i].l||'?')} → ${(NODES[j].label||NODES[j].l||'?')}: ${v} km`;
       h+=`<td class="${cls}" title="${tip}">${v===0?'—':v>=INF?'∞':v+' <span style="font-size:9px;color:inherit;opacity:.6">km</span>'}</td>`;
     });
     h+='</tr>';
@@ -293,7 +292,7 @@ async function runFW(){
   const sorted=[...avgs].sort((a,b)=>a.avg-b.avg).slice(0,5);
   const maxAvg=sorted[sorted.length-1].avg||1;
   document.getElementById('fw-centrality-bars').innerHTML=sorted.map(x=>
-    `<div class="fw-bar-row"><span class="fw-bar-label">${NODES[x.i].l.split(' ').slice(0,2).join(' ')}</span><div class="fw-bar-track"><div class="fw-bar-fill" style="width:${(100-((x.avg/maxAvg)*50)).toFixed(0)}%"><span class="fw-bar-val">${x.avg.toFixed(1)}</span></div></div></div>`
+    `<div class="fw-bar-row"><span class="fw-bar-label">${(NODES[x.i].label||NODES[x.i].l||'?').split(' ').slice(0,2).join(' ')}</span><div class="fw-bar-track"><div class="fw-bar-fill" style="width:${(100-((x.avg/maxAvg)*50)).toFixed(0)}%"><span class="fw-bar-val">${x.avg.toFixed(1)}</span></div></div></div>`
   ).join('');
   document.getElementById('fw-centrality').style.display='block';
   }
@@ -394,23 +393,30 @@ function runRKP(){
 async function heapSortComplaints(){
     try {
         const res = await api('/complaints/sorted');
-        renderComplaints(res.data);
+        const sorted = res.data.map(c => ({
+            id: c.id,
+            cat: c.category || c.cat || 'ROAD',
+            desc: c.description || c.desc || '',
+            urg: c.urgency || c.urg || 5,
+            zone: c.zone || '',
+            status: c.status || 'Pending',
+            date: c.date_filed || c.date || '2026-01-01'
+        }));
+        renderComplaints(sorted);
         showToast('Complaints sorted by priority');
     } catch(e) {
-        showError('complaints-tbody', 'Could not sort complaints.');
-        const arr=[...complaintsData];
-  function heapify(a,n,i){
-    let lg=i,l=2*i+1,r=2*i+2;
-    if(l<n&&a[l].urg>a[lg].urg) lg=l;
-    if(r<n&&a[r].urg>a[lg].urg) lg=r;
-    if(lg!==i){[a[i],a[lg]]=[a[lg],a[i]];heapify(a,n,lg);
+        const arr = [...complaintsData];
+        function heapify(a, n, i) {
+            let lg = i, l = 2*i+1, r = 2*i+2;
+            if (l < n && a[l].urg > a[lg].urg) lg = l;
+            if (r < n && a[r].urg > a[lg].urg) lg = r;
+            if (lg !== i) { [a[i], a[lg]] = [a[lg], a[i]]; heapify(a, n, lg); }
+        }
+        for (let i = Math.floor(arr.length/2)-1; i >= 0; i--) heapify(arr, arr.length, i);
+        for (let i = arr.length-1; i > 0; i--) { [arr[0], arr[i]] = [arr[i], arr[0]]; heapify(arr, i, 0); }
+        arr.reverse();
+        renderComplaints(arr);
     }
-}
-  }
-  for(let i=Math.floor(arr.length/2)-1;i>=0;i--) heapify(arr,arr.length,i);
-  for(let i=arr.length-1;i>0;i--){[arr[0],arr[i]]=[arr[i],arr[0]];heapify(arr,i,0);}
-  arr.reverse();
-  renderComplaints(arr);
 }
 
 // ── P04: Knapsack ────────────────────────────────────────────────
@@ -532,7 +538,7 @@ function drawMST(svgId,mstEdges,col){
   });
   NODES.forEach(n=>{
     html+=`<rect x="${n.x*sc-4}" y="${n.y*sy2-4}" width="8" height="8" fill="#fff" stroke="#555"/>`;
-    html+=`<text x="${n.x*sc}" y="${n.y*sy2+16}" fill="#aaa" font-size="6" text-anchor="middle" font-family="monospace">${n.l.split(' ')[0]}</text>`;
+    html+=`<text x="${n.x*sc}" y="${n.y*sy2+16}" fill="#aaa" font-size="6" text-anchor="middle" font-family="monospace">${(n.label||n.l||'?').split(' ')[0]}</text>`;
   });
   svg.innerHTML=html;
 }
@@ -564,13 +570,14 @@ function prim(){
 async function runBothMST(){
   showLoading('mst-kr');
   try {
-      const [kruskalRes, primRes] = showPanel('p01');
-    await Promise.all([
+      const [kruskalRes, primRes] = await Promise.all([
           api('/algo/mst/kruskal'),
           api('/algo/mst/prim')
       ]);
-      drawMST('mst-kr', kruskalRes.data.edges, '#2E9B50');
-      drawMST('mst-pr', primRes.data.edges, '#4A90D9');
+      const krEdges = (kruskalRes.data.mst_edges || kruskalRes.data.edges || []).map(e => Array.isArray(e) ? [e[0],e[1],e[2]] : [e.node_u, e.node_v, e.weight]);
+      const prEdges = (primRes.data.mst_edges || primRes.data.edges || []).map(e => Array.isArray(e) ? [e[0],e[1],e[2]] : [e.node_u, e.node_v, e.weight]);
+      drawMST('mst-kr', krEdges, '#2E9B50');
+      drawMST('mst-pr', prEdges, '#4A90D9');
       document.getElementById('mst-min-cost').textContent=kruskalRes.data.total_weight+' km';
       document.getElementById('mst-result-section').style.display='block';
       document.getElementById('mst-empty').style.display='none';
@@ -603,7 +610,7 @@ async function runBothMST(){
     </div>`;
 
   // Network summary
-  const pairs=kr.mst.map(([u,v,w])=>`${NODES[u].l.split(' ')[0]} ↔ ${NODES[v].l.split(' ')[0]} (${w} km)`).join(' · ');
+  const pairs=kr.mst.map(([u,v,w])=>`${(NODES[u].label||NODES[u].l||'?').split(' ')[0]} ↔ ${(NODES[v].label||NODES[v].l||'?').split(' ')[0]} (${w} km)`).join(' · ');
   document.getElementById('mst-network-summary').innerHTML=`✓ All 13 zones connected. Total infrastructure: <strong>${kr.cost} km</strong> of cable.<br/><span style="opacity:.8;">${pairs}</span>`;
 
   document.getElementById('mst-result-section').style.display='block';
@@ -987,7 +994,15 @@ document.querySelector('[data-panel="ps2"]')?.addEventListener('click',()=>{
 async function loadComplaints() {
     try {
         const res = await api('/complaints');
-        complaintsData = res.data;
+        complaintsData = res.data.map(c => ({
+            id: c.id,
+            cat: c.category || c.cat || 'ROAD',
+            desc: c.description || c.desc || '',
+            urg: c.urgency || c.urg || 5,
+            zone: c.zone || '',
+            status: c.status || 'Pending',
+            date: c.date_filed || c.date || '2026-01-01'
+        }));
         renderComplaints(complaintsData);
     } catch(e) {
         console.log('Using local complaints');
