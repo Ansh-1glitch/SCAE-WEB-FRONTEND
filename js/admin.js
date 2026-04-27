@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loggedInEl = document.getElementById('loggedInName');
     if(loggedInEl) loggedInEl.textContent = name || 'City Commissioner';
     
+    showPanel('p01');
     await Promise.all([
         loadGraphData(),
         loadComplaints(),
@@ -18,21 +19,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
 });
 
+
 async function loadGraphData() {
     try {
-        const [nodesRes, edgesRes] = await Promise.all([
+        const [nodesRes, edgesRes] = showPanel('p01');
+    await Promise.all([
             api('/graph/nodes'),
             api('/graph/edges')
         ]);
         window.graphNodes = nodesRes.data;
-        window.graphEdges = edgesRes.data;
+        window.graphEdges = edgesRes.data.map(e => [e.node_u, e.node_v, e.weight]);
     } catch(e) {
-        console.log('Using local graph data');
+        console.log('Using fallback graph data');
+        window.graphNodes = [
+    {id:0, label:"Central Junction", x:120, y:140, l:"Central Junction", area:"Central Junction"},
+    {id:1, label:"North Gate", x:280, y:200, l:"North Gate", area:"North Gate"},
+    {id:2, label:"City Hall", x:420, y:100, l:"City Hall", area:"City Hall"},
+    {id:3, label:"East Market", x:560, y:180, l:"East Market", area:"East Market"},
+    {id:4, label:"West Park", x:200, y:300, l:"West Park", area:"West Park"},
+    {id:5, label:"Downtown", x:380, y:310, l:"Downtown", area:"Downtown"},
+    {id:6, label:"South Bridge", x:320, y:410, l:"South Bridge", area:"South Bridge"},
+    {id:7, label:"River Road", x:480, y:390, l:"River Road", area:"River Road"},
+    {id:8, label:"Industrial Zone", x:620, y:360, l:"Industrial Zone", area:"Industrial Zone"},
+    {id:9, label:"Medical Hub", x:440, y:250, l:"Medical Hub", area:"Medical Hub"},
+    {id:10, label:"Tech District", x:560, y:290, l:"Tech District", area:"Tech District"},
+    {id:11, label:"Old Town", x:170, y:400, l:"Old Town", area:"Old Town"},
+    {id:12, label:"Sports Complex", x:460, y:470, l:"Sports Complex", area:"Sports Complex"}
+];
+        window.graphEdges = [
+    [0,1,3],[0,4,4],[1,2,5],[1,4,2],[1,9,6],[2,3,4],[2,9,3],
+    [3,5,5],[3,10,7],[4,6,8],[4,11,4],[5,9,2],[5,10,4],[6,7,5],
+    [6,11,3],[7,8,4],[7,10,3],[8,12,5],[9,10,1]
+];
     }
+    NODES = window.graphNodes;
+    EDGES = window.graphEdges;
+    N = NODES.length;
+    
+    // Populate Dropdowns
+    const src=document.getElementById('d-src'), dst=document.getElementById('d-dst');
+    if(src && dst) {
+        src.innerHTML=''; dst.innerHTML='';
+        NODES.forEach((n,i)=>{
+            const lbl = n.label || n.l || n.area;
+            src.add(new Option(lbl,i));
+            dst.add(new Option(lbl,i));
+        });
+        dst.selectedIndex=N-1;
+    }
+
+    drawSCAEMap('city-map');
 }
 
+
 // ── Graph Data ──────────────────────────────────────────────────
-const NODES=[
+let NODES=[
   {x:80,y:120,l:'Central Junction'},{x:220,y:200,l:'North Gate'},
   {x:340,y:100,l:'City Hall'},{x:480,y:180,l:'East Market'},
   {x:160,y:280,l:'West Park'},{x:320,y:300,l:'Downtown'},
@@ -41,12 +82,12 @@ const NODES=[
   {x:460,y:290,l:'Tech District'},{x:120,y:380,l:'Old Town'},
   {x:380,y:430,l:'Sports Complex'}
 ];
-const EDGES=[
+let EDGES=[
   [0,1,3],[0,4,4],[1,2,5],[1,4,2],[1,9,6],[2,3,4],[2,9,3],
   [3,5,5],[3,10,7],[4,6,8],[4,11,4],[5,9,2],[5,10,4],[6,7,5],
   [6,11,3],[7,8,4],[7,10,3],[8,12,5],[9,10,1]
 ];
-const N=NODES.length;
+let N=NODES.length;
 
 // ── Map options ──────────────────────────────────────────────────
 const MAP_OPTS={NODES,EDGES,viewW:620,viewH:520};
@@ -521,7 +562,8 @@ function prim(){
 async function runBothMST(){
   showLoading('mst-kr');
   try {
-      const [kruskalRes, primRes] = await Promise.all([
+      const [kruskalRes, primRes] = showPanel('p01');
+    await Promise.all([
           api('/algo/mst/kruskal'),
           api('/algo/mst/prim')
       ]);
@@ -565,12 +607,13 @@ async function runBothMST(){
   document.getElementById('mst-result-section').style.display='block';
   document.getElementById('mst-empty').style.display='none';
   }
-}function initTSP(){
+}
+function initTSP(){
   const el=document.getElementById('tsp-checks'); if(!el) return;
   el.innerHTML=NODES.map((n,i)=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:12px;border:1px solid var(--border);padding:5px 10px;border-radius:3px;cursor:pointer;"><input type="checkbox" class="tsp-chk" value="${i}"/> ${n.l}</label>`
   ).join('');
-})();
+}
 
 function distNode(a,b){return Math.hypot(NODES[a].x-NODES[b].x,NODES[a].y-NODES[b].y);}
 
@@ -968,4 +1011,51 @@ async function loadCitizens() {
     } catch(e) {
         console.log('Using local citizens');
     }
+}
+
+
+function drawSCAEMap(svgId) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = '';
+    window.graphEdges.forEach(e => {
+        const u = window.graphNodes.find(n => n.id === e[0] || n.id === e.node_u);
+        const v = window.graphNodes.find(n => n.id === e[1] || n.id === e.node_v);
+        if(!u || !v) return;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', u.x); line.setAttribute('y1', u.y);
+        line.setAttribute('x2', v.x); line.setAttribute('y2', v.y);
+        line.setAttribute('stroke', '#9DB8D2');
+        line.setAttribute('stroke-width', '2');
+        svg.appendChild(line);
+
+        const midX = (u.x + v.x) / 2;
+        const midY = (u.y + v.y) / 2;
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX); text.setAttribute('y', midY - 5);
+        text.setAttribute('fill', '#666');
+        text.setAttribute('font-size', '10px');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = (e[2] !== undefined ? e[2] : e.weight) + 'km';
+        svg.appendChild(text);
+    });
+
+    window.graphNodes.forEach(n => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
+        circle.setAttribute('r', '6');
+        circle.setAttribute('fill', '#fff');
+        circle.setAttribute('stroke', '#003366');
+        circle.setAttribute('stroke-width', '2');
+        svg.appendChild(circle);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', n.x); text.setAttribute('y', n.y + 18);
+        text.setAttribute('fill', '#333');
+        text.setAttribute('font-size', '11px');
+        text.setAttribute('font-family', 'Inter, Arial, sans-serif');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = n.label || n.l || n.area;
+        svg.appendChild(text);
+    });
 }

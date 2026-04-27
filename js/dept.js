@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loggedInEl = document.getElementById('loggedInName');
     if(loggedInEl) loggedInEl.textContent = name || 'Dept Operator';
     
+    showPanel('p01');
     await Promise.all([
         // loadWorkOrders(),
         // loadEmergencies()

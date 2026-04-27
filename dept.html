@@ -115,13 +115,13 @@ input[type=range]{width:100%;accent-color:var(--orange);margin:4px 0 12px;}
 
 <nav class="sidebar">
   <div class="nav-section">Operations Menu</div>
-  <div class="nav-item active" data-panel="p01">Work Order Queue</div>
-  <div class="nav-item" data-panel="p02">Schedule Jobs</div>
-  <div class="nav-item" data-panel="p03">Activity Planner</div>
-  <div class="nav-item" data-panel="p04">Resource Allocator</div>
-  <div class="nav-item" data-panel="p05">Emergency Dispatch</div>
-  <div class="nav-item" data-panel="p06">Sensor Data Logging</div>
-  <div class="nav-item" data-panel="p07">Operations Optimization</div>
+  <div class="nav-item active" onclick="showPanel('p01')" data-panel="p01">Work Order Queue</div>
+  <div class="nav-item" onclick="showPanel('p02')" data-panel="p02">Schedule Jobs</div>
+  <div class="nav-item" onclick="showPanel('p03')" data-panel="p03">Activity Planner</div>
+  <div class="nav-item" onclick="showPanel('p04')" data-panel="p04">Resource Allocator</div>
+  <div class="nav-item" onclick="showPanel('p05')" data-panel="p05">Emergency Dispatch</div>
+  <div class="nav-item" onclick="showPanel('p06')" data-panel="p06">Sensor Data Logging</div>
+  <div class="nav-item" onclick="showPanel('p07')" data-panel="p07">Operations Optimization</div>
   <div class="sidebar-footer"><div style="margin-bottom:6px;">Logged in as: <strong>Dept Operator</strong></div><a href="index.html">← Exit to Portal</a></div>
 </nav>
 
