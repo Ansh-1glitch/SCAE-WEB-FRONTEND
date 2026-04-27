@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCAE — Admin Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #003366;
+      --orange: #FF6600;
+      --green: #2E7D32;
+      --border: #CCCCCC;
+      --bg: #F2F2F2;
+      --text: #212121;
+      --muted: #666666;
+      --mono: 'Courier New', monospace;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: #F2F2F2;
+    }
+
+    /* Utility bar */
+    .gov-utility {
+      background: #003366;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .85);
+    }
+
+    .gov-utility a {
+      color: rgba(255, 255, 255, .85);
+      text-decoration: none;
+      margin-left: 12px;
+    }
+
+    .gov-utility a:hover {
+      text-decoration: underline;
+      color: #fff;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: fixed;
+      top: 32px;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 200;
+    }
+
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tb-ham {
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--muted);
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .tb-brand {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--navy);
+    }
+
+    .tb-panel {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-size: 11px;
+    }
+
+    .tb-stat {
+      padding: 0 12px;
+      border-left: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .tb-stat span {
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-bar {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: var(--orange);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 12px;
+      color: #fff;
+      z-index: 199;
+    }
+
+    .breadcrumb-bar a {
+      color: rgba(255, 255, 255, .85);
+      text-decoration: none;
+    }
+
+    .breadcrumb-bar a:hover {
+      text-decoration: underline;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 116px;
+      left: 0;
+      width: 220px;
+      height: calc(100vh - 116px);
+      background: #fff;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .15em;
+      color: #999;
+      padding: 16px 16px 6px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 9px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      transition: all .15s;
+    }
+
+    .nav-item:hover {
+      background: #F2F2F2;
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: #F0F4FF;
+      border-left-color: var(--orange);
+      color: var(--navy);
+      font-weight: bold;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sidebar-footer a {
+      color: var(--navy);
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .sidebar-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Main */
+    .main {
+      margin-left: 220px;
+      padding-top: 116px;
+      min-height: 100vh;
+      background: #fff;
+    }
+
+    .panel {
+      display: none;
+      padding: 0;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .ph {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 116px;
+      z-index: 50;
+    }
+
+    .ph-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--navy);
+    }
+
+    .ph-title::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: var(--orange);
+      margin-top: 6px;
+    }
+
+    .pc {
+      padding: 24px;
+    }
+
+    .two-col {
+      display: grid;
+      gap: 0;
+    }
+
+    .two-col-7-3 {
+      grid-template-columns: 70% 30%;
+    }
+
+    .two-col-5-5 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .col-border {
+      border-left: 1px solid var(--border);
+    }
+
+    label.field {
+      display: block;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    select,
+    input[type=text],
+    input[type=number],
+    textarea {
+      width: 100%;
+      border: 1px solid #999;
+      padding: 8px 10px;
+      font: 14px Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--orange);
+      border-width: 2px;
+    }
+
+    textarea {
+      resize: vertical;
+      height: 110px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      font: 13px Arial, sans-serif;
+      font-weight: bold;
+      border-radius: 2px;
+      cursor: pointer;
+      border: none;
+      transition: background .2s;
+    }
+
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background: #002244;
+    }
+
+    .btn-ghost {
+      background: #fff;
+      border: 1px solid var(--navy);
+      color: var(--navy);
+      width: 100%;
+      margin-bottom: 6px;
+    }
+
+    .btn-ghost:hover {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 12px;
+      width: auto;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-card {
+      padding: 14px 18px;
+      border-right: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .stat-card:last-child {
+      border-right: none;
+    }
+
+    .stat-card .sc-label {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 4px;
+    }
+
+    .stat-card .sc-val {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--navy);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .06em;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 9px 12px;
+      border: 1px solid #CCCCCC;
+    }
+
+    tr:nth-child(even) td {
+      background: #F2F2F2;
+    }
+
+    tr:hover td {
+      background: #FFFDE7;
+    }
+
+    .urg {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .urg-h {
+      background: #fde8e8;
+      color: #b91c1c;
+    }
+
+    .urg-m {
+      background: #fef9c3;
+      color: #92400e;
+    }
+
+    .urg-l {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .sp-p {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .sp-ip {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .sp-r {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .result-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .rr {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .rr span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .callout {
+      background: #fef9c3;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 3px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.6;
+    }
+
+    .matrix-wrap {
+      overflow: auto;
+      max-height: 500px;
+      border: 1px solid var(--border);
+    }
+
+    .matrix-wrap table th,
+    .matrix-wrap table td {
+      min-width: 44px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 4px;
+    }
+
+    .matrix-wrap table td.diag {
+      background: #f0ece5;
+      color: var(--muted);
+    }
+
+    .matrix-wrap table td.inf {
+      color: #ccc;
+    }
+
+    .bar-area {
+      height: 280px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-item {
+      flex: 1;
+      min-width: 4px;
+      background: var(--navy);
+      transition: height .05s, background .1s;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0ece5;
+      font-size: 13px;
+    }
+
+    .check-row input[type=checkbox] {
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      accent-color: var(--navy);
+    }
+
+    .check-name {
+      flex: 1;
+    }
+
+    .check-cost {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      width: 70px;
+      text-align: right;
+    }
+
+    .check-ben {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      width: 60px;
+      text-align: right;
+    }
+
+    .bucket-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+
+    .bucket-lbl {
+      width: 65px;
+      color: var(--muted);
+    }
+
+    .chain-node {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 22px;
+      background: var(--navy);
+      color: #fff;
+      border-radius: 2px;
+      font-size: 10px;
+      margin-right: 2px;
+    }
+
+    .chain-node.empty {
+      background: #e9e6e0;
+      color: var(--muted);
+    }
+
+    #benchChart {
+      max-height: 260px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      margin: 4px 0 12px;
+      accent-color: var(--navy);
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 14px;
+    }
+
+    .ftab {
+      padding: 7px 14px;
+      font: 13px Arial, sans-serif;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: #fff;
+      color: var(--muted);
+      border-right: none;
+    }
+
+    .ftab:last-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .ftab.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .mst-svg {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      width: 100%;
+      height: 260px;
+    }
+
+    #city-map,
+    #route-map,
+    #sim-map,
+    #dis-map,
+    #bfs-map {
+      background: #F8FAFD;
+      border: 1px solid #C8D4E0;
+      width: 100%;
+      display: block;
+      border-radius: 6px;
+    }
+
+    #city-map {
+      height: 520px;
+    }
+
+    #sim-map,
+    #dis-map {
+      height: 480px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .tgl {
+      padding: 7px 14px;
+      font: 13px Arial, sans-serif;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: #fff;
+      color: var(--muted);
+      border-radius: 3px;
+    }
+
+    .tgl.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .vis-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .info-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Collapsible tech details - hidden */
+    .tech-strip {
+      display: none;
+    }
+
+    .tech-toggle {
+      display: none;
+    }
+
+    .tech-body {
+      display: none;
+    }
+
+    /* ── PANEL REDESIGNS ─────────────────────────────────────── */
+    .fw-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .fw-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+    }
+
+    .fw-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--navy);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .fw-card-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .fw-card-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1.3;
+    }
+
+    .fw-card-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .fw-section-heading {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .fw-section-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .fw-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 460px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+    }
+
+    .fw-table-wrap table {
+      margin: 0;
+      border-collapse: collapse;
+      min-width: 100%;
+    }
+
+    .fw-table-wrap th {
+      background: #1B3A6B;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 8px 10px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      letter-spacing: .05em;
+    }
+
+    .fw-table-wrap td {
+      font-family: var(--mono);
+      font-size: 12px;
+      text-align: center;
+      padding: 6px 8px;
+      border-bottom: 1px solid #f0ece5;
+      cursor: default;
+      transition: background .1s;
+    }
+
+    .fw-table-wrap td.diag {
+      background: #0D2545;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .fw-table-wrap td.fw-low {
+      background: #F0FFF4;
+    }
+
+    .fw-table-wrap td.fw-mid {
+      background: #FFFBF0;
+    }
+
+    .fw-table-wrap td.fw-hi {
+      background: #FFF5F5;
+    }
+
+    .fw-table-wrap tr:hover td:not(.diag) {
+      background: #E8F0FF !important;
+    }
+
+    .fw-row-th {
+      background: #1B3A6B !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+      font-size: 10px !important;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      text-align: left !important;
+      white-space: nowrap;
+      padding: 6px 10px !important;
+      letter-spacing: .03em;
+    }
+
+    .fw-centrality {
+      margin-top: 24px;
+    }
+
+    .fw-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .fw-bar-label {
+      font-size: 12px;
+      color: var(--text);
+      width: 130px;
+      flex-shrink: 0;
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .fw-bar-track {
+      flex: 1;
+      background: #f0ece5;
+      border-radius: 4px;
+      height: 20px;
+      overflow: hidden;
+    }
+
+    .fw-bar-fill {
+      height: 100%;
+      background: var(--navy);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 7px;
+      transition: width .7s ease;
+    }
+
+    .fw-bar-val {
+      font-size: 10px;
+      color: #fff;
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    /* P03 Complaints */
+    .complaint-stat-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+    }
+
+    .cs-card {
+      padding: 20px 18px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #fff;
+    }
+
+    .cs-card:last-child {
+      border-right: none;
+    }
+
+    .cs-num {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .cs-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 5px;
+    }
+
+    .cs-icon {
+      font-size: 22px;
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      opacity: .3;
+    }
+
+    .cs-bar {
+      height: 4px;
+      margin-top: 14px;
+      border-radius: 2px;
+    }
+
+    .cs-card.navy .cs-num {
+      color: #1B3A6B;
+    }
+
+    .cs-card.red .cs-num {
+      color: #DC2626;
+    }
+
+    .cs-card.green .cs-num {
+      color: #16A34A;
+    }
+
+    .cs-card.amber .cs-num {
+      color: #D97706;
+    }
+
+    .complaint-search-wrap {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .complaint-search-inner {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      padding: 0 16px;
+      gap: 8px;
+      height: 44px;
+      transition: border-color .15s;
+    }
+
+    .complaint-search-inner:focus-within {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 2px rgba(27, 58, 107, .08);
+    }
+
+    .complaint-search-inner .si {
+      font-size: 16px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .complaint-search-inner input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font: 14px Arial, sans-serif;
+      outline: none;
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .cpill-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .cpill {
+      padding: 6px 16px;
+      font: 13px Arial, sans-serif;
+      font-weight: 600;
+      border: 1.5px solid var(--navy);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all .15s;
+      background: #fff;
+      color: var(--navy);
+      line-height: 1;
+    }
+
+    .cpill:hover {
+      background: #EBF0FB;
+    }
+
+    .cpill.active {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .c-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .c-count {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .c-action-right {
+      display: flex;
+      gap: 6px;
+    }
+
+    #complaints-table {
+      border-collapse: collapse;
+    }
+
+    #complaints-table thead th {
+      background: var(--navy);
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      position: sticky;
+      top: 0;
+      text-align: left;
+    }
+
+    #complaints-table tbody tr {
+      background: #fff;
+      border-bottom: 1px solid #EBEBEB;
+      transition: all .12s;
+      cursor: pointer;
+    }
+
+    #complaints-table tbody tr:hover {
+      background: #F0F4FF !important;
+      box-shadow: inset 3px 0 0 var(--navy);
+    }
+
+    #complaints-table tbody td {
+      border: none;
+      padding: 13px 12px;
+      vertical-align: middle;
+    }
+
+    .cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .cat-road {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .cat-power {
+      background: #FFF9C4;
+      color: #854D0E;
+    }
+
+    .cat-water {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+
+    .cat-safety {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .urg-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .urg-badge.ub-hi {
+      background: #DC2626;
+    }
+
+    .urg-badge.ub-med {
+      background: #D97706;
+    }
+
+    .urg-badge.ub-low {
+      background: #16A34A;
+    }
+
+    .sp-new {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sp-new::before {
+      content: '●';
+      margin-right: 5px;
+      font-size: 8px;
+    }
+
+    .sp-new-p {
+      border: 1.5px solid #D97706;
+      color: #92400E;
+    }
+
+    .sp-new-p::before {
+      color: #D97706;
+    }
+
+    .sp-new-ip {
+      border: 1.5px solid #1E40AF;
+      color: #1E40AF;
+    }
+
+    .sp-new-ip::before {
+      color: #1E40AF;
+    }
+
+    .sp-new-r {
+      border: 1.5px solid #16A34A;
+      color: #16A34A;
+    }
+
+    .sp-new-r::before {
+      color: #16A34A;
+    }
+
+    .view-btn {
+      padding: 5px 14px;
+      font: 11px Arial, sans-serif;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .view-btn:hover {
+      border-color: var(--navy);
+      color: var(--navy);
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      z-index: 300;
+      display: none;
+    }
+
+    .drawer-overlay.open {
+      display: block;
+    }
+
+    .complaint-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 380px;
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid var(--border);
+      z-index: 301;
+      transform: translateX(100%);
+      transition: transform .3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, .12);
+    }
+
+    .complaint-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1;
+    }
+
+    .drawer-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .drawer-close:hover {
+      background: var(--bg);
+    }
+
+    .drawer-body {
+      padding: 24px;
+      flex: 1;
+    }
+
+    .drawer-id {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .drawer-field {
+      margin-bottom: 14px;
+    }
+
+    .drawer-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .drawer-val {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .tl-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding-bottom: 16px;
+      position: relative;
+    }
+
+    .tl-step::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 26px;
+      bottom: 0;
+      width: 2px;
+      background: #e4e0d8;
+    }
+
+    .tl-step:last-child::before {
+      display: none;
+    }
+
+    .tl-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .tl-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .tl-dot.current {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .tl-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      padding-top: 4px;
+    }
+
+    .tl-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .pattern-section {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .pattern-toggle-btn {
+      font-size: 12px;
+      color: var(--navy);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pattern-body {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .pattern-body.open {
+      display: block;
+    }
+
+    /* P04 Budget */
+    .budget-3col {
+      display: grid;
+      grid-template-columns: 35% 35% 30%;
+      min-height: 540px;
+    }
+
+    .budget-col {
+      padding: 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .budget-col:last-child {
+      border-right: none;
+    }
+
+    .budget-header {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .budget-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .budget-amount {
+      font-size: 34px;
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .budget-amount-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .ks-proj-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border-left: 4px solid transparent;
+      transition: all .15s;
+      cursor: pointer;
+    }
+
+    .ks-proj-card:hover {
+      border-color: var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .07);
+    }
+
+    .ks-proj-card.checked {
+      border-left-color: var(--navy);
+      background: #F2F6FF;
+    }
+
+    .ks-proj-card input[type=checkbox] {
+      margin-top: 3px;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--navy);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .ks-proj-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ks-proj-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .ks-proj-tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .ks-tag-cost {
+      background: #F5F4F0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    .ks-tag-ben {
+      background: #E8F5E9;
+      border: 1px solid #A8D5B0;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: #16A34A;
+      font-weight: 600;
+    }
+
+    .ks-tag-ratio {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .ks-empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--muted);
+    }
+
+    .ks-empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .ks-empty-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .ks-empty-sub {
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .ks-result-card {
+      background: #fff;
+      border: 1px solid #A8D5B0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ks-result-card .ck {
+      color: #16A34A;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .ks-result-card .proj-name {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ks-result-card .proj-cost {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      flex-shrink: 0;
+    }
+
+    .ks-reject-card {
+      background: #F8F8F8;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: .5;
+    }
+
+    .ks-reject-card .ck {
+      color: #ccc;
+      font-size: 14px;
+    }
+
+    .ks-budget-progress {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ks-prog-track {
+      background: #F0ECE5;
+      border-radius: 4px;
+      height: 10px;
+      margin: 6px 0 4px;
+      overflow: hidden;
+    }
+
+    .ks-prog-fill {
+      height: 100%;
+      background: var(--navy);
+      border-radius: 4px;
+      transition: width .6s ease;
+    }
+
+    .ks-prog-label {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* P05 Power Grid */
+    .mst-3cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .mst-info-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      border-left: 4px solid var(--navy);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+    }
+
+    .mst-info-card-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .mst-info-card-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--navy);
+    }
+
+    .mst-info-card-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .mst-canvas-wrap {
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #1A2E42;
+    }
+
+    .mst-canvas-label {
+      background: rgba(13, 27, 42, .95);
+      color: #A8C8E8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 14px;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: .04em;
+    }
+
+    #mst-kr,
+    #mst-pr {
+      background: #0D1B2A;
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    .mst-result-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .mst-result-card {
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .mst-result-card.green {
+      border-left: 4px solid #16A34A;
+    }
+
+    .mst-result-card.blue {
+      border-left: 4px solid #1B3A6B;
+    }
+
+    .mst-result-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mst-metric {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0ece5;
+    }
+
+    .mst-metric:last-of-type {
+      border-bottom: none;
+    }
+
+    .mst-metric .lbl {
+      color: var(--muted);
+    }
+
+    .mst-metric .val {
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .mst-winner {
+      display: inline-block;
+      background: #ECFDF5;
+      border: 1px solid #A8D5B0;
+      color: #16A34A;
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .mst-insight {
+      background: #F2F6FF;
+      border: 1px solid #C2D4F0;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: #1B3A6B;
+      line-height: 1.7;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 44px 20px;
+    }
+
+    .es-icon {
+      font-size: 48px;
+      margin-bottom: 14px;
+    }
+
+    .es-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .es-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    @media(max-width:1200px) {
+      .budget-3col {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .budget-3col .budget-col:last-child {
+        grid-column: 1/-1;
+        border-right: none;
+        border-top: 1px solid var(--border);
+      }
+    }
+
+    @media(max-width:900px) {
+
+      .budget-3col,
+      .mst-result-cards,
+      .fw-cards,
+      .complaint-stat-cards,
+      .mst-3cards {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media(max-width:600px) {
+
+      .budget-3col,
+      .fw-cards,
+      .complaint-stat-cards,
+      .mst-3cards,
+      .mst-result-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Government Utility Bar -->
+  <div class="gov-utility">
+    <span>🇮🇳 Smart City Algorithm Engine — Admin Dashboard</span>
+    <div><span>Logged in as: City Commissioner | Last Login: Today 09:45 AM</span><a href="index.html">Logout</a></div>
+  </div>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="tb-ham" onclick="document.querySelector('.sidebar').classList.toggle('collapsed')"
+        aria-label="Toggle sidebar">☰</button>
+      <span class="tb-brand">SCAE</span>
+      <span class="tb-panel">/ Admin Dashboard</span>
+    </div>
+    <div class="tb-right">
+      <div class="tb-stat">52 City Zones</div>
+      <div class="tb-stat">13 Active Sectors</div>
+      <div class="tb-stat"><span class="status-dot"></span>System <span>Online</span></div>
+    </div>
+  </header>
+
+  <!-- Breadcrumb Bar -->
+  <div class="breadcrumb-bar" id="breadcrumb"><a href="index.html">Home</a> &gt; Admin Dashboard &gt; <span
+      id="bc-panel">Route Planner</span></div>
+
+  <nav class="sidebar">
+    <div class="nav-section">Main Menu</div>
+    <div class="nav-item active" data-panel="p01">Route Planner</div>
+    <div class="nav-item" data-panel="p02">Distance Overview</div>
+    <div class="nav-item" data-panel="p03">Complaint Management</div>
+    <div class="nav-item" data-panel="p04">Budget Planner</div>
+    <div class="nav-item" data-panel="p05">Power Grid Optimizer</div>
+    <div class="nav-item" data-panel="p06">Patrol Route Planner</div>
+    <div class="nav-item" data-panel="p07">Complaint Patterns</div>
+    <div class="nav-item" data-panel="p08">Budget Feasibility</div>
+    <div class="nav-item" data-panel="p09">Learning Center</div>
+    <div class="nav-item" data-panel="p10">Performance Reports</div>
+    <div class="nav-item" data-panel="p11">Citizen Records</div>
+    <div class="nav-section">Simulation Tools</div>
+    <div class="nav-item" data-panel="ps1">Road Closure</div>
+    <div class="nav-item" data-panel="ps2">Disaster Response</div>
+    <div class="nav-item" data-panel="ps3">Emergency Dispatch</div>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:6px;">Logged in as: <strong>City Commissioner</strong></div>
+      <a href="index.html">← Exit to Portal</a>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- P01 -->
+    <div class="panel active" id="p01">
+      <div class="ph"><span class="ph-title">Route Planner</span></div>
+      <div class="two-col two-col-7-3">
+        <div style="padding:16px;position:relative;"><svg id="city-map" viewBox="0 0 620 650"></svg></div>
+        <div class="col-border" style="padding:20px;">
+          <label class="field">Starting Point</label><select id="d-src"></select>
+          <label class="field">Destination</label><select id="d-dst"></select>
+          <button class="btn btn-primary" onclick="runDijkstra()">&#9658; Get Directions</button>
+          <div class="result-box">
+            <div class="rr">Your Route: <span id="d-path">Select a starting point and destination above.</span></div>
+            <div class="rr">Total Distance: <span id="d-dist">—</span></div>
+            <div class="rr">Calculated in: <span id="d-time">—</span></div>
+          </div>
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+          <button class="btn btn-ghost" onclick="simRoadClosure()">Simulate Road Closure</button>
+          <button class="btn btn-ghost" onclick="showPanel('ps2')">Simulate Disaster</button>
+          <button class="btn btn-ghost" onclick="showPanel('ps3')">Emergency Dispatch</button>
+          <div class="tech-strip"><button class="tech-toggle"
+              onclick="this.nextElementSibling.classList.toggle('open')">⚙ Technical Details</button>
+            <div class="tech-body">Algorithm: Dijkstra's Shortest Path<br />Time Complexity: O((V+E) log V)<br />Space
+              Complexity: O(V)<br />Unit: DAA Unit 3 — Graph Algorithms</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P02 -->
+    <div class="panel" id="p02">
+      <div class="ph"><span class="ph-title">City Distance Overview</span></div>
+      <div class="pc">
+        <div id="fw-cards" class="fw-cards" style="display:none"></div>
+        <button class="btn btn-primary" style="width:auto;margin-bottom:20px;padding:11px 28px;" onclick="runFW()">⊞
+          Compute All-Zone Distances</button>
+        <div id="fw-empty" class="empty-state">
+          <div class="es-icon">🗺️</div>
+          <div class="es-title">Distance Matrix Not Yet Generated</div>
+          <div class="es-sub">Click "Compute All-Zone Distances" to calculate the shortest path between all 13 city
+            zones.</div>
+        </div>
+        <div id="fw-matrix-section" style="display:none">
+          <div class="fw-section-heading">All-Zone Distance Matrix</div>
+          <div class="fw-section-sub">Shortest path distance in km between every pair of city zones</div>
+          <div id="fw-out" class="fw-table-wrap"></div>
+        </div>
+        <div id="fw-centrality" class="fw-centrality" style="display:none">
+          <label class="field" style="margin-bottom:12px;">Zone Centrality — Average distance to all other zones</label>
+          <div id="fw-centrality-bars"></div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Floyd-Warshall All-Pairs Shortest Path<br />Time Complexity:
+            O(V³)<br />Space Complexity: O(V²)<br />Unit: DAA Unit 3 — Graph Algorithms / Dynamic Programming</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P03 -->
+    <div class="panel" id="p03">
+      <div class="ph"><span class="ph-title">Complaint Management</span></div>
+      <div class="drawer-overlay" id="complaint-overlay" onclick="closeComplaintDrawer()"></div>
+      <div class="complaint-drawer" id="complaint-drawer">
+        <div class="drawer-header">
+          <span style="font-weight:700;font-size:15px;color:var(--text)">Complaint Details</span>
+          <button class="drawer-close" onclick="closeComplaintDrawer()">✕</button>
+        </div>
+        <div class="drawer-body" id="drawer-body"></div>
+      </div>
+      <div class="pc">
+        <div class="complaint-stat-cards">
+          <div class="cs-card navy"><span class="cs-icon">📋</span>
+            <div class="cs-num">24</div>
+            <div class="cs-label">Total Complaints</div>
+            <div class="cs-bar" style="background:#1B3A6B;width:100%"></div>
+          </div>
+          <div class="cs-card red"><span class="cs-icon">🔴</span>
+            <div class="cs-num">8</div>
+            <div class="cs-label">Urgent Cases</div>
+            <div class="cs-bar" style="background:#DC2626;width:33%"></div>
+          </div>
+          <div class="cs-card green"><span class="cs-icon">✅</span>
+            <div class="cs-num">11</div>
+            <div class="cs-label">Resolved</div>
+            <div class="cs-bar" style="background:#16A34A;width:46%"></div>
+          </div>
+          <div class="cs-card amber"><span class="cs-icon">⏳</span>
+            <div class="cs-num">13</div>
+            <div class="cs-label">Pending</div>
+            <div class="cs-bar" style="background:#D97706;width:54%"></div>
+          </div>
+        </div>
+        <div class="complaint-search-wrap">
+          <div class="complaint-search-inner"><span class="si">🔍</span><input type="text" id="kmp-q"
+              placeholder="Search by area, category or description..." /></div>
+          <button class="btn btn-primary btn-sm" onclick="kmpSearch()"
+            style="width:auto;border-radius:20px;padding:8px 20px;">Search</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderComplaints(complaintsData)"
+            style="width:auto;border-radius:20px;padding:8px 16px;">Clear</button>
+        </div>
+        <div class="cpill-tabs" id="filter-tabs">
+          <div class="cpill ftab active" onclick="filterComplaints('ALL',this)">ALL</div>
+          <div class="cpill ftab" onclick="filterComplaints('ROAD',this)">🛣️ ROAD</div>
+          <div class="cpill ftab" onclick="filterComplaints('POWER',this)">⚡ POWER</div>
+          <div class="cpill ftab" onclick="filterComplaints('WATER',this)">💧 WATER</div>
+          <div class="cpill ftab" onclick="filterComplaints('SAFETY',this)">🛡️ SAFETY</div>
+        </div>
+        <div class="c-action-bar">
+          <span class="c-count" id="c-count-label">Showing 8 complaints</span>
+          <div class="c-action-right">
+            <button class="btn btn-ghost btn-sm" onclick="heapSortComplaints()" style="width:auto;">Sort by Priority
+              ↓</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="complaints-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Area</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="complaints-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pattern-section">
+          <button class="pattern-toggle-btn" onclick="this.nextElementSibling.classList.toggle('open')">▼ Complaint
+            Pattern Analysis</button>
+          <div class="pattern-body">
+            <div style="display:flex;gap:8px;margin:12px 0;">
+              <input type="text" id="rkp-q" placeholder="Enter pattern to detect (e.g. pothole, outage)..."
+                style="flex:1;border-radius:20px;margin:0;" />
+              <button class="btn btn-primary btn-sm" onclick="runRKP()" style="width:auto;border-radius:20px;">Detect
+                Pattern</button>
+            </div>
+            <div id="rkp-result"></div>
+            <label class="field" style="margin-top:14px;margin-bottom:10px;">Complaint Frequency by Category</label>
+            <div id="cat-freq-chart">
+              <div class="fw-bar-row"><span class="fw-bar-label">ROAD</span>
+                <div class="fw-bar-track">
+                  <div class="fw-bar-fill" style="width:38%;background:#92400E"><span class="fw-bar-val">3</span></div>
+                </div>
+              </div>
+              <div class="fw-bar-row"><span class="fw-bar-label">POWER</span>
+                <div class="fw-bar-track">
+                  <div class="fw-bar-fill" style="width:25%;background:#B45309"><span class="fw-bar-val">2</span></div>
+                </div>
+              </div>
+              <div class="fw-bar-row"><span class="fw-bar-label">WATER</span>
+                <div class="fw-bar-track">
+                  <div class="fw-bar-fill" style="width:25%;background:#1D4ED8"><span class="fw-bar-val">2</span></div>
+                </div>
+              </div>
+              <div class="fw-bar-row"><span class="fw-bar-label">SAFETY</span>
+                <div class="fw-bar-track">
+                  <div class="fw-bar-fill" style="width:25%;background:#991B1B"><span class="fw-bar-val">2</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Heap Sort (priority ordering) + KMP (pattern search)<br />Time Complexity:
+            O(n log n) sort, O(n+m) search<br />Space Complexity: O(1)<br />Unit: DAA Unit 2 — Sorting &amp; String
+            Matching</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P04 -->
+    <div class="panel" id="p04">
+      <div class="ph"><span class="ph-title">Annual Budget Planner</span></div>
+      <div class="budget-3col">
+        <div class="budget-col">
+          <div class="budget-header">Available Projects</div>
+          <div class="budget-sub">Select projects to include in optimization</div>
+          <div class="budget-amount">₹<span id="ks-budget-display">500</span> Cr</div>
+          <div class="budget-amount-sub">Available Annual Budget</div>
+          <input type="range" id="ks-budget-slider" min="100" max="700" value="500"
+            oninput="document.getElementById('ks-budget-display').textContent=this.value" style="margin-bottom:14px;" />
+          <div id="ks-projects"></div>
+          <button class="btn btn-primary" style="margin-top:14px;height:48px;font-size:14px;"
+            onclick="runKnapsack()">Find Optimal Allocation →</button>
+        </div>
+        <div class="budget-col">
+          <div class="budget-header">Recommended Projects</div>
+          <div class="budget-sub">Optimal selection for maximum benefit</div>
+          <div id="ks-result">
+            <div class="ks-empty-state">
+              <div class="ks-empty-icon">📊</div>
+              <div class="ks-empty-text">Analysis Not Run Yet</div>
+              <div class="ks-empty-sub">Click "Find Optimal Allocation" to see the recommended project set.</div>
+            </div>
+          </div>
+        </div>
+        <div class="budget-col" style="background:#FAFAF9;">
+          <div class="budget-header">Allocation Breakdown</div>
+          <div class="budget-sub">Budget utilization and efficiency</div>
+          <div id="ks-chart-wrap" style="display:none;">
+            <canvas id="ks-donut" style="max-height:180px;margin-bottom:14px;"></canvas>
+            <div id="ks-efficiency-box"></div>
+          </div>
+          <div id="ks-chart-empty" class="ks-empty-state" style="padding:28px 10px;">
+            <div class="ks-empty-icon" style="font-size:32px;">📈</div>
+            <div class="ks-empty-text" style="font-size:13px;">No data yet</div>
+            <div class="ks-empty-sub">Breakdown appears after running the optimizer.</div>
+          </div>
+          <div id="ks-dp-preview-wrap" style="margin-top:14px;display:none;">
+            <label class="field">DP Table Preview</label>
+            <div id="ks-table"
+              style="overflow:auto;max-height:160px;border:1px solid var(--border);border-radius:6px;font-size:10px;cursor:pointer;"
+              onclick="document.getElementById('ks-dp-modal').style.display='flex'"></div>
+            <p style="font-size:10px;color:var(--muted);margin-top:4px;">Click to expand full matrix</p>
+          </div>
+          <div class="tech-strip"><button class="tech-toggle"
+              onclick="this.nextElementSibling.classList.toggle('open')">⚙ Technical Details</button>
+            <div class="tech-body">Algorithm: 0/1 Knapsack Dynamic Programming<br />Time Complexity: O(nW)<br />Space
+              Complexity: O(nW)<br />Unit: DAA Unit 4 — Dynamic Programming</div>
+          </div>
+        </div>
+      </div>
+      <div id="ks-dp-modal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center;"
+        onclick="if(event.target===this)this.style.display='none'">
+        <div style="background:#fff;border-radius:8px;padding:24px;max-width:90vw;max-height:80vh;overflow:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><strong
+              style="font-family:'Merriweather',serif;">Full DP Allocation Matrix</strong><button
+              onclick="document.getElementById('ks-dp-modal').style.display='none'"
+              style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">✕</button></div>
+          <div id="ks-dp-modal-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P05 -->
+    <div class="panel" id="p05">
+      <div class="ph"><span class="ph-title">Power Grid Optimizer</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7;">Find the minimum-cost cable
+          network to connect all 13 city zones to the power grid. Two optimization strategies are compared — select the
+          best approach for your infrastructure budget.</p>
+        <div class="mst-3cards">
+          <div class="mst-info-card">
+            <div class="mst-info-card-label">City Zones to Connect</div>
+            <div class="mst-info-card-val">13</div>
+            <div class="mst-info-card-sub">All zones included</div>
+          </div>
+          <div class="mst-info-card">
+            <div class="mst-info-card-label">Possible Connections</div>
+            <div class="mst-info-card-val">22</div>
+            <div class="mst-info-card-sub">Total candidate links</div>
+          </div>
+          <div class="mst-info-card" id="mst-cost-card">
+            <div class="mst-info-card-label">Minimum Cable Required</div>
+            <div class="mst-info-card-val" id="mst-min-cost">—</div>
+            <div class="mst-info-card-sub">km of cable (run optimizer)</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:auto;margin-bottom:20px;height:48px;padding:0 32px;font-size:14px;"
+          onclick="runBothMST()">⚡ Optimize Power Grid</button>
+        <div class="two-col two-col-5-5" style="gap:16px;margin-bottom:0;">
+          <div class="mst-canvas-wrap">
+            <div class="mst-canvas-label">Option 1 — Edge Priority</div>
+            <div style="position:relative;"><svg id="mst-kr" viewBox="0 0 620 500"></svg></div>
+          </div>
+          <div class="mst-canvas-wrap">
+            <div class="mst-canvas-label">Option 2 — Zone Priority</div>
+            <div style="position:relative;"><svg id="mst-pr" viewBox="0 0 620 500"></svg></div>
+          </div>
+        </div>
+        <div id="mst-result-section" style="display:none;">
+          <div class="mst-result-cards" id="mst-results"></div>
+          <div class="mst-insight">Both approaches produce an identical minimum-cost network. Option 1 processes all
+            connections globally by cost — faster for sparse areas. Option 2 grows from Central Junction outward —
+            better suited for dense urban networks.</div>
+          <div id="mst-network-summary"
+            style="margin-top:14px;padding:14px;background:#F0FFF4;border:1px solid #A8D5B0;border-radius:6px;font-size:12px;color:#14532D;line-height:1.7;">
+          </div>
+        </div>
+        <div id="mst-empty" class="empty-state">
+          <div class="es-icon">⚡</div>
+          <div class="es-title">Optimizer Not Run</div>
+          <div class="es-sub">Click "⚡ Optimize Power Grid" to compute the minimum spanning tree for both strategies and
+            compare results.</div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithms: Kruskal's MST (Strategy A) + Prim's MST (Strategy B)<br />Time Complexity:
+            O(E log E)<br />Space Complexity: O(V)<br />Unit: DAA Unit 3 — Greedy Graph Algorithms</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P06 -->
+    <div class="panel" id="p06">
+      <div class="ph"><span class="ph-title">Police Patrol Planner</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Select 3–6 patrol checkpoints to plan the most
+          efficient patrol circuit:</p>
+        <div id="tsp-checks" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn btn-primary btn-sm" onclick="runTSP('greedy')" style="width:auto;">Find Quick Route (Large
+            Set)</button>
+          <button class="btn btn-primary btn-sm" onclick="runTSP('brute')"
+            style="width:auto;background:var(--green);">Find Optimal Route (Small Set)</button>
+        </div>
+        <div class="two-col two-col-5-5" style="gap:16px;">
+          <div class="result-box"><label class="field">Quick Route Result</label>
+            <div id="tsp-g"></div>
+          </div>
+          <div class="result-box"><label class="field">Optimal Route Result</label>
+            <div id="tsp-b"></div>
+          </div>
+        </div>
+        <div class="callout">Planning patrol routes for many checkpoints is extremely complex. The quick method gives a
+          good route fast, while the optimal method guarantees the best route but only works for small sets (≤6
+          checkpoints).</div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Travelling Salesman Problem (TSP)<br />Quick = Nearest Neighbour Greedy
+            O(n²), Optimal = Brute Force O(n!)<br />TSP is NP-Hard — no known polynomial-time exact solution<br />Unit:
+            DAA Unit 5 — NP-Completeness</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P07 -->
+    <div class="panel" id="p07">
+      <div class="ph"><span class="ph-title">Complaint Pattern Analysis</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Compare two complaint texts to find common
+          patterns and identify duplicates.</p>
+        <div class="two-col two-col-5-5" style="gap:16px;margin-bottom:14px;">
+          <div><label class="field">Complaint Text 1</label><textarea
+              id="lcs-a">Pothole reported on Main Street near Bus Stop 4. Road surface damaged due to waterlogging.</textarea>
+          </div>
+          <div><label class="field">Complaint Text 2</label><textarea
+              id="lcs-b">Road surface damaged near Bus Stop 12. Request immediate repair of Main Street potholes.</textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:16px;" onclick="runLCS()">Analyze Common
+          Patterns</button>
+        <div class="result-box">
+          <div class="rr">Common Pattern Found: <span id="lcs-str">—</span></div>
+          <div class="rr">Pattern Length: <span id="lcs-len">—</span></div>
+          <div class="rr">Analysis Steps: <span id="lcs-comp">—</span></div>
+          <div class="rr">Baseline Comparison: <span id="lcs-naive">—</span></div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Longest Common Subsequence (LCS) DP<br />Time Complexity: O(mn)<br />Space
+            Complexity: O(mn)<br />Unit: DAA Unit 4 — Dynamic Programming</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P08 -->
+    <div class="panel" id="p08">
+      <div class="ph"><span class="ph-title">Budget Feasibility Check</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Check if a specific budget target can be
+          exactly met by selecting from available projects:</p>
+        <div id="ss-checks"></div>
+        <label class="field" style="margin-top:12px;">Target Budget (₹ Cr)</label>
+        <input type="number" id="ss-target" value="450" style="max-width:160px;" />
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn btn-primary btn-sm" onclick="runSubsetSum('backtrack')" style="width:auto;">Check Exact
+            Feasibility</button>
+          <button class="btn btn-primary btn-sm" onclick="runSubsetSum('dp')"
+            style="width:auto;background:var(--green);">Check Smart Feasibility</button>
+        </div>
+        <div class="two-col two-col-5-5" style="gap:16px;">
+          <div class="result-box"><label class="field">Exact Check Result</label>
+            <div id="ss-bt"></div>
+          </div>
+          <div class="result-box"><label class="field">Smart Check Result</label>
+            <div id="ss-dp"></div>
+          </div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Subset Sum (NP-Complete)<br />Method 1: Backtracking — Time:
+            O(2ⁿ)<br />Method 2: DP — Time: O(nW), Space: O(nW)<br />Unit: DAA Unit 5 — NP-Completeness & Backtracking
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P09 -->
+    <div class="panel" id="p09">
+      <div class="ph"><span class="ph-title">Algorithm Learning Center</span></div>
+      <div class="pc">
+        <div class="vis-controls">
+          <select id="vis-algo" onchange="updateVisAlgo()" style="width:180px;margin:0;">
+            <option>Bubble Sort</option>
+            <option>Insertion Sort</option>
+            <option>Selection Sort</option>
+            <option>Merge Sort</option>
+            <option>Quick Sort</option>
+            <option>Heap Sort</option>
+            <option>Counting Sort</option>
+          </select>
+          <label style="font-size:12px;color:var(--muted);">Size: <input type="range" id="vis-size" min="10" max="50"
+              value="30" style="width:80px;margin:0 0 0 6px;" oninput="this.nextSibling.textContent=this.value"> <span
+              style="font-family:monospace;font-size:11px;">30</span></label>
+          <label style="font-size:12px;color:var(--muted);">Speed: <input type="range" id="vis-speed" min="10" max="500"
+              value="80" style="width:80px;margin:0 0 0 6px;"></label>
+          <button class="btn btn-primary btn-sm" onclick="visPlay()">▶ Play</button>
+          <button class="btn btn-ghost btn-sm" onclick="visPause=true">⏸ Pause</button>
+          <button class="btn btn-ghost btn-sm" onclick="visReset()">↺ Reset</button>
+        </div>
+        <div class="bar-area" id="vis-bars"></div>
+        <div style="display:flex;gap:24px;margin-top:10px;font-size:12px;font-family:monospace;">
+          <span>Comparisons: <strong id="vis-comp">0</strong></span>
+          <span>Swaps: <strong id="vis-swap">0</strong></span>
+          <span>Complexity: <strong id="vis-big-o">O(n²)</strong></span>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithms: Bubble/Insertion/Selection Sort O(n²), Merge/Quick/Heap Sort O(n log n),
+            Counting Sort O(n+k)<br />Unit: DAA Unit 1 — Foundations & Sorting</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P10 -->
+    <div class="panel" id="p10">
+      <div class="ph"><span class="ph-title">Performance Analytics</span></div>
+      <div class="pc">
+        <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-bottom:16px;">
+          <div><label class="field">Dataset Size</label><select id="bm-size" style="width:120px;margin:0;">
+              <option>100</option>
+              <option selected>1000</option>
+              <option>10000</option>
+            </select></div>
+          <div><label class="field">Input Type</label>
+            <div class="toggle-group">
+              <div class="tgl active" onclick="setToggle(this,'bm-type')">Random</div>
+              <div class="tgl" onclick="setToggle(this,'bm-type')">Sorted</div>
+              <div class="tgl" onclick="setToggle(this,'bm-type')">Reverse</div>
+            </div>
+          </div>
+          <div><button class="btn btn-primary btn-sm" onclick="runBenchmark()" style="width:auto;margin-top:18px;">Run
+              Analysis</button></div>
+          <div><button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;margin-top:18px;">Export
+              CSV</button></div>
+        </div>
+        <canvas id="benchChart" style="max-height:240px;margin-bottom:20px;"></canvas>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>N</th>
+                <th>Time (ms)</th>
+                <th>Operations</th>
+                <th>Complexity</th>
+              </tr>
+            </thead>
+            <tbody id="bm-tbody"></tbody>
+          </table>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Benchmarks all 7 sorting algorithms on identical datasets<br />Measures wall-clock time
+            and comparison counts<br />Unit: DAA Unit 1 — Asymptotic Analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P11 -->
+    <div class="panel" id="p11">
+      <div class="ph"><span class="ph-title">Citizen Record Lookup</span></div>
+      <div class="two-col two-col-5-5">
+        <div style="padding:20px;">
+          <label class="field">Search Citizen</label>
+          <input type="text" id="ht-q" placeholder="Citizen ID or Name..." style="margin-bottom:8px;" />
+          <div class="toggle-group" style="margin-bottom:12px;">
+            <div class="tgl active" onclick="setToggle(this,'ht-mode');htMode='chaining'">Method A</div>
+            <div class="tgl" onclick="setToggle(this,'ht-mode');htMode='open'">Method B</div>
+          </div>
+          <button class="btn btn-primary" onclick="htSearch()" style="margin-bottom:14px;">Search</button>
+          <div class="result-box">
+            <div class="rr">Record: <span id="ht-rec">—</span></div>
+            <div class="rr">Area: <span id="ht-zone">—</span></div>
+            <div class="rr">Lookup Steps: <span id="ht-comp">—</span></div>
+            <div class="rr">Bucket Depth: <span id="ht-chain">—</span></div>
+          </div>
+          <div class="stat-row" style="margin-top:14px;grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card">
+              <div class="sc-label">Load Factor</div>
+              <div class="sc-val" style="font-size:18px;">0.71</div>
+            </div>
+            <div class="stat-card">
+              <div class="sc-label">Avg Depth</div>
+              <div class="sc-val" style="font-size:18px;">1.4</div>
+            </div>
+            <div class="stat-card">
+              <div class="sc-label">Max Depth</div>
+              <div class="sc-val" style="font-size:18px;">3</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-border" style="padding:20px;">
+          <label class="field">Index Structure (7 buckets)</label>
+          <div id="ht-buckets"></div>
+          <label class="field" style="margin-top:16px;">Citizen Records</label>
+          <div style="overflow:auto;max-height:220px;">
+            <table id="ht-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Area</th>
+                  <th>Bucket</th>
+                </tr>
+              </thead>
+              <tbody id="ht-tbody"></tbody>
+            </table>
+          </div>
+          <div class="tech-strip"><button class="tech-toggle"
+              onclick="this.nextElementSibling.classList.toggle('open')">⚙ Technical Details</button>
+            <div class="tech-body">Algorithm: Hash Table with Chaining / Open Addressing<br />Time Complexity: O(1)
+              average, O(n) worst case<br />Space Complexity: O(n)<br />Unit: DAA Unit 2 — Hashing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIM PANELS -->
+    <div class="panel" id="ps1">
+      <div class="ph"><span class="ph-title">Road Closure Simulation</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Click any road segment on the map below to
+          close it, then the system will automatically find an alternate route.</p>
+        <div style="padding:16px;position:relative;"><svg id="sim-map"
+            style="width:100%;height:480px;display:block;"></svg></div>
+        <div class="result-box" style="margin-top:12px;">
+          <div class="rr">Status: <span id="sim-status">No road closures active. Click a road segment to simulate
+              closure.</span></div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Bellman-Ford Shortest Path (handles re-routing)<br />Time Complexity:
+            O(VE)<br />Unit: DAA Unit 3 — Graph Algorithms</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="ps2">
+      <div class="ph"><span class="ph-title">Disaster Response Simulation</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Click any zone to mark it offline (affected by
+          disaster). The system identifies isolated areas and connectivity status.</p>
+        <div style="padding:16px;position:relative;"><svg id="dis-map"
+            style="width:100%;height:480px;display:block;"></svg></div>
+        <div class="result-box" style="margin-top:12px;">
+          <div class="rr">Connectivity: <span id="dis-comps">All zones connected.</span></div>
+        </div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Depth-First Search (Connected Components)<br />Time Complexity:
+            O(V+E)<br />Unit: DAA Unit 3 — Graph Traversal</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="ps3">
+      <div class="ph"><span class="ph-title">Emergency Dispatch Center</span></div>
+      <div class="pc">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Generate and dispatch repair crews to emergency
+          calls, prioritized by urgency level.</p>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin-bottom:14px;" onclick="runDispatch()">Generate
+          &amp; Dispatch Calls</button>
+        <div id="dispatch-queue"></div>
+        <div class="tech-strip"><button class="tech-toggle" onclick="this.nextElementSibling.classList.toggle('open')">⚙
+            Technical Details</button>
+          <div class="tech-body">Algorithm: Heap Sort Priority Queue<br />Time Complexity: O(n log n)<br />Unit: DAA
+            Unit 2 — Heap Data Structure</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <script src="js/map.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="description" content="SCAE — Smart City Algorithm Engine. Government Smart City Initiative Portal."/>
+<title>SCAE — Smart City Administration Portal | Government of India</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:Arial,Helvetica,sans-serif;color:#212121;background:#F2F2F2;line-height:1.6;}
+a{color:#1A237E;text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ── Utility Bar ── */
+.utility-bar{background:#003366;height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;font-size:12px;color:#fff;}
+.utility-bar a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:16px;}
+.utility-bar a:hover{text-decoration:underline;color:#fff;}
+
+/* ── Header ── */
+.main-header{background:#fff;border-bottom:4px solid #FF6600;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;}
+.header-left{display:flex;align-items:center;gap:16px;}
+.emblem{width:56px;height:56px;border-radius:50%;background:#003366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;flex-shrink:0;}
+.header-text .h-name{font-size:24px;font-weight:bold;color:#003366;line-height:1.2;}
+.header-text .h-full{font-size:13px;color:#333;margin-top:1px;}
+.header-text .h-sub{font-size:11px;color:#666;}
+.header-right{text-align:right;font-size:12px;color:#666;line-height:1.8;}
+
+/* ── Nav Bar ── */
+.nav-bar{background:#003366;display:flex;align-items:center;padding:0 40px;}
+.nav-bar a{color:#fff;font-size:13px;padding:12px 18px;text-decoration:none;display:block;transition:background .15s;}
+.nav-bar a:hover,.nav-bar a.active{background:#FF6600;text-decoration:none;}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#003366 0%,#001A33 100%);padding:60px 40px;text-align:center;color:#fff;}
+.hero h1{font-size:32px;font-weight:bold;margin-bottom:12px;}
+.hero p{font-size:16px;opacity:.85;margin-bottom:28px;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-orange{background:#FF6600;color:#fff;font-size:14px;font-weight:bold;padding:12px 28px;border:2px solid #FF6600;cursor:pointer;text-decoration:none;display:inline-block;}
+.btn-orange:hover{background:#e55b00;text-decoration:none;}
+.btn-ghost-white{background:transparent;color:#fff;font-size:14px;font-weight:bold;padding:12px 28px;border:2px solid #fff;cursor:pointer;text-decoration:none;display:inline-block;}
+.btn-ghost-white:hover{background:rgba(255,255,255,.15);text-decoration:none;}
+
+/* ── Quick Services ── */
+.quick-services{background:#fff;padding:32px 40px;border-bottom:1px solid #CCCCCC;}
+.qs-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;}
+.qs-item{text-align:center;padding:20px 10px;border-right:1px solid #EEEEEE;cursor:pointer;transition:background .15s;}
+.qs-item:last-child{border-right:none;}
+.qs-item:hover{background:#FFF3E0;border-bottom:3px solid #FF6600;}
+.qs-icon{font-size:28px;margin-bottom:6px;}
+.qs-label{font-size:12px;font-weight:bold;color:#003366;}
+
+/* ── Section Common ── */
+.section-heading{text-align:center;margin-bottom:28px;}
+.section-heading h2{font-size:22px;font-weight:bold;color:#003366;margin-bottom:6px;}
+.section-heading .underline{width:60px;height:3px;background:#FF6600;margin:0 auto;}
+
+/* ── Role Selection ── */
+.section-roles{background:#F2F2F2;padding:48px 40px;}
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;}
+.role-card{background:#fff;border:1px solid #CCCCCC;cursor:pointer;transition:box-shadow .2s;}
+.role-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.rc-top{padding:10px 20px;color:#fff;font-size:11px;font-weight:bold;letter-spacing:.1em;}
+.rc-top.orange{background:#FF6600;}
+.rc-top.navy{background:#003366;}
+.rc-top.green{background:#2E7D32;}
+.rc-body{padding:20px;text-align:center;}
+.rc-icon{font-size:36px;margin-bottom:8px;}
+.rc-title{font-size:16px;font-weight:bold;color:#212121;margin-bottom:4px;}
+.rc-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:16px;}
+.rc-btn{display:block;padding:10px;font-size:13px;font-weight:bold;text-align:center;text-decoration:none;color:#fff;}
+.rc-btn.navy{background:#003366;}.rc-btn.navy:hover{background:#002244;text-decoration:none;}
+.rc-btn.orange{background:#FF6600;}.rc-btn.orange:hover{background:#e55b00;text-decoration:none;}
+.rc-btn.green{background:#2E7D32;}.rc-btn.green:hover{background:#1B5E20;text-decoration:none;}
+
+/* ── Notices ── */
+.notices-section{background:#fff;padding:32px 40px;border-top:1px solid #CCCCCC;}
+.notices-box{border:1px solid #CCCCCC;border-left:4px solid #FF6600;}
+.notices-header{background:#FFF3E0;padding:10px 16px;font-size:14px;font-weight:bold;color:#333;}
+.notice-item{padding:10px 16px;border-bottom:1px solid #EEEEEE;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#333;}
+.notice-item:last-child{border-bottom:none;}
+.notice-date{font-size:11px;color:#999;flex-shrink:0;margin-left:16px;}
+.notice-link{color:#1A237E;font-size:12px;font-weight:bold;margin-left:12px;white-space:nowrap;}
+
+/* ── Stats Strip ── */
+.stats-strip{background:#003366;padding:32px 40px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;text-align:center;}
+.stat-box{padding:16px;border-right:1px solid rgba(255,255,255,.15);}
+.stat-box:last-child{border-right:none;}
+.stat-num{font-size:32px;font-weight:bold;color:#fff;}
+.stat-label{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;}
+
+/* ── Footer ── */
+.footer-top{background:#1a1a1a;color:#ccc;padding:36px 40px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;font-size:13px;line-height:2;}
+.footer-top h4{color:#FF6600;font-size:12px;letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase;}
+.footer-top a{color:#ccc;text-decoration:none;}.footer-top a:hover{color:#fff;text-decoration:underline;}
+.footer-bottom{background:#111;color:#888;text-align:center;padding:14px 40px;font-size:11px;line-height:1.8;}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .cards-grid,.qs-grid{grid-template-columns:1fr 1fr;}
+  .footer-top{grid-template-columns:1fr;}
+  .stats-strip{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .cards-grid,.qs-grid,.stats-strip{grid-template-columns:1fr;}
+  .utility-bar,.main-header,.nav-bar,.hero,.quick-services,.section-roles,.notices-section,.stats-strip,.footer-top,.footer-bottom{padding-left:16px;padding-right:16px;}
+  .hero h1{font-size:24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── UTILITY BAR ── -->
+<div class="utility-bar">
+  <span>🇮🇳 Government of India — Smart City Administration Portal</span>
+  <div>
+    <a href="#">Skip to Main Content</a>
+    <a href="#">Screen Reader Access</a>
+    <a href="#">English</a>
+    <a href="#">हिंदी</a>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="main-header">
+  <div class="header-left">
+    <div class="emblem">SCAE</div>
+    <div class="header-text">
+      <div class="h-name">SCAE</div>
+      <div class="h-full">Smart City Algorithm Engine</div>
+      <div class="h-sub">Government Smart City Initiative</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="header-date"></div>
+    <div>Helpline: 1800-XXX-XXXX</div>
+  </div>
+</header>
+
+<!-- ── NAV BAR ── -->
+<nav class="nav-bar">
+  <a href="#" class="active">Home</a>
+  <a href="#about">About SCAE</a>
+  <a href="#roles">City Services</a>
+  <a href="citizen.html">Complaints</a>
+  <a href="#footer">Contact Us</a>
+  <a href="#">FAQs</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <h1>Welcome to Smart City Algorithm Engine</h1>
+  <p>Empowering Citizens Through Technology | स्मार्ट सिटी — आपकी सेवा में</p>
+  <div class="hero-btns">
+    <a class="btn-orange" href="#roles">Login to Portal</a>
+    <a class="btn-ghost-white" href="#about">Know More</a>
+  </div>
+</section>
+
+<!-- ── QUICK SERVICES ── -->
+<div class="quick-services">
+  <div class="qs-grid">
+    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">🗺️</div><div class="qs-label">Route Planner</div></div>
+    <div class="qs-item" onclick="navigate('citizen.html','citizen')"><div class="qs-icon">📋</div><div class="qs-label">File Complaint</div></div>
+    <div class="qs-item" onclick="navigate('citizen.html','citizen')"><div class="qs-icon">🔍</div><div class="qs-label">Track Complaint</div></div>
+    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">💡</div><div class="qs-label">Power Grid</div></div>
+    <div class="qs-item" onclick="navigate('admin.html','admin')"><div class="qs-icon">💰</div><div class="qs-label">Budget Info</div></div>
+    <div class="qs-item" onclick="navigate('dept.html','dept')"><div class="qs-icon">🚨</div><div class="qs-label">Emergency</div></div>
+  </div>
+</div>
+
+<!-- ── ROLE SELECTION ── -->
+<section class="section-roles" id="roles">
+  <div class="section-heading">
+    <h2>Select Your Login Type</h2>
+    <div class="underline"></div>
+  </div>
+  <div class="cards-grid">
+    <!-- Admin -->
+    <div class="role-card" onclick="navigate('admin.html','admin')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('admin.html','admin')">
+      <div class="rc-top orange">ADMINISTRATOR</div>
+      <div class="rc-body">
+        <div class="rc-icon">🏛️</div>
+        <div class="rc-title">City Commissioner</div>
+        <div class="rc-desc">Full administrative access to all city management modules including route planning, budget allocation, and infrastructure monitoring.</div>
+        <a class="rc-btn navy" href="admin.html">LOGIN AS ADMIN →</a>
+      </div>
+    </div>
+    <!-- Citizen -->
+    <div class="role-card" onclick="navigate('citizen.html','citizen')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('citizen.html','citizen')">
+      <div class="rc-top navy">CITIZEN / नागरिक</div>
+      <div class="rc-body">
+        <div class="rc-icon">👤</div>
+        <div class="rc-title">Public User</div>
+        <div class="rc-desc">File complaints, find shortest routes, track service requests, and explore city services in your zone.</div>
+        <a class="rc-btn orange" href="citizen.html">LOGIN AS CITIZEN →</a>
+      </div>
+    </div>
+    <!-- Department -->
+    <div class="role-card" onclick="navigate('dept.html','dept')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('dept.html','dept')">
+      <div class="rc-top green">DEPARTMENT OPERATOR</div>
+      <div class="rc-body">
+        <div class="rc-icon">🏢</div>
+        <div class="rc-title">Dept. Staff</div>
+        <div class="rc-desc">Manage work orders, maintenance schedules, supply logistics, and emergency dispatch operations.</div>
+        <a class="rc-btn green" href="dept.html">LOGIN AS DEPT. STAFF →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── IMPORTANT NOTICES ── -->
+<section class="notices-section" id="about">
+  <div class="section-heading">
+    <h2>📢 Important Notices</h2>
+    <div class="underline"></div>
+  </div>
+  <div class="notices-box">
+    <div class="notices-header">📢 Latest Updates & Announcements</div>
+    <div class="notice-item"><span>New: Online complaint filing now available for all city zones</span><span class="notice-date">07 Apr 2025</span><a class="notice-link" href="citizen.html">Read More →</a></div>
+    <div class="notice-item"><span>Maintenance scheduled for Industrial Zone power grid — 15 April 2025</span><span class="notice-date">05 Apr 2025</span><a class="notice-link" href="#">Read More →</a></div>
+    <div class="notice-item"><span>Road closure on South Bridge — alternate route via River Road available</span><span class="notice-date">03 Apr 2025</span><a class="notice-link" href="#">Read More →</a></div>
+    <div class="notice-item"><span>Emergency helpline updated: Call 1800-XXX-XXXX for immediate assistance</span><span class="notice-date">01 Apr 2025</span><a class="notice-link" href="#">Read More →</a></div>
+  </div>
+</section>
+
+<!-- ── STATS STRIP ── -->
+<div class="stats-strip">
+  <div class="stat-box"><div class="stat-num">11,240+</div><div class="stat-label">Complaints Resolved</div></div>
+  <div class="stat-box"><div class="stat-num">13</div><div class="stat-label">City Zones Covered</div></div>
+  <div class="stat-box"><div class="stat-num">47</div><div class="stat-label">Active Work Orders</div></div>
+  <div class="stat-box"><div class="stat-num">52,000+</div><div class="stat-label">Citizens Registered</div></div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer id="footer">
+  <div class="footer-top">
+    <div>
+      <h4>About SCAE</h4>
+      <strong>Smart City Algorithm Engine</strong><br/>
+      Smart City Authority, City Hall<br/>
+      Downtown Zone<br/>
+      Helpline: 1800-XXX-XXXX<br/>
+      Email: support@scae.gov.in
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <a href="#">Site Map</a><br/>
+      <a href="#">Accessibility</a><br/>
+      <a href="#">Disclaimer</a><br/>
+      <a href="#">Privacy Policy</a><br/>
+      <a href="#">Terms of Use</a><br/>
+      <a href="#">RTI</a>
+    </div>
+    <div>
+      <h4>Related Links</h4>
+      <a href="https://www.digitalindia.gov.in" target="_blank">Digital India</a><br/>
+      <a href="https://www.mygov.in" target="_blank">MyGov</a><br/>
+      <a href="https://web.umang.gov.in" target="_blank">UMANG</a><br/>
+      <a href="https://smartcities.gov.in" target="_blank">Smart Cities Mission</a><br/>
+      <a href="https://data.gov.in" target="_blank">data.gov.in</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Smart City Algorithm Engine. All Rights Reserved. | Designed &amp; Developed by Node Navigators | NIC<br/>
+    Last Updated: 07 April 2025
+  </div>
+</footer>
+
+<script>
+// Date display
+(function(){
+  const d=new Date();
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const el=document.getElementById('header-date');
+  if(el) el.textContent=days[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+d.getFullYear()+' | '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+})();
+function navigate(page,role){sessionStorage.setItem('scae_role',role);window.location.href=page;}
+</script>
+</body>
+</html>

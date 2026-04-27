@@ -1,0 +1,14 @@
+# Python server (not needed for frontend deployment)
+server/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

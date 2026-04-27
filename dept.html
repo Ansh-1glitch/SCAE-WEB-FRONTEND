@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SCAE — Department Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--navy:#003366;--orange:#FF6600;--green:#2E7D32;--border:#CCCCCC;--bg:#F2F2F2;--text:#212121;--muted:#666666;--mono:'Courier New',monospace;}
+body{font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#F2F2F2;}
+/* Utility bar */
+.gov-utility{background:#003366;height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:11px;color:rgba(255,255,255,.85);}
+.gov-utility a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:12px;}
+.gov-utility a:hover{text-decoration:underline;color:#fff;}
+/* Topbar */
+.topbar{position:fixed;top:32px;left:0;right:0;height:48px;background:#fff;border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:200;}
+.tb-left{display:flex;align-items:center;gap:10px;}
+.tb-brand{font-size:16px;font-weight:bold;color:var(--navy);}
+.tb-panel{font-size:12px;color:var(--muted);}
+.tb-right{display:flex;align-items:center;gap:12px;font-size:11px;}
+.tb-pill{background:#FFF3E0;color:#D84315;padding:3px 10px;border-radius:2px;font-weight:bold;font-size:10px;border:1px solid #FFAB40;}
+.status-dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:4px;}
+/* Breadcrumb */
+.breadcrumb-bar{position:fixed;top:80px;left:0;right:0;height:36px;background:#FFF3E0;border-bottom:1px solid #FFAB40;display:flex;align-items:center;padding:0 20px;font-size:12px;color:#D84315;z-index:199;}
+.breadcrumb-bar a{color:#D84315;text-decoration:none;font-weight:bold;}
+.breadcrumb-bar a:hover{text-decoration:underline;}
+/* Sidebar */
+.sidebar{position:fixed;top:116px;left:0;width:220px;height:calc(100vh - 116px);background:#fff;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;z-index:100;}
+.nav-section{font-size:10px;font-weight:bold;letter-spacing:.15em;color:#999;padding:16px 16px 6px;text-transform:uppercase;}
+.nav-item{display:block;padding:9px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-left:4px solid transparent;transition:all .15s;white-space:nowrap;}
+.nav-item:hover{background:#F2F2F2;color:var(--text);}
+.nav-item.active{background:#F0F4FF;border-left-color:var(--orange);color:var(--navy);font-weight:bold;}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+.sidebar-footer a{color:var(--navy);text-decoration:none;font-size:11px;}
+.sidebar-footer a:hover{text-decoration:underline;}
+/* Main */
+.main{margin-left:220px;padding-top:116px;min-height:100vh;background:#fff;}
+.panel{display:none;}.panel.active{display:block;}
+.ph{padding:18px 24px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:116px;z-index:50;}
+.ph-title{font-size:18px;font-weight:bold;color:var(--navy);}
+.ph-title::after{content:'';display:block;width:60px;height:3px;background:var(--orange);margin-top:6px;}
+.ph-badges{display:none;}
+.badge-a,.badge-gray{display:none;}
+.pc{padding:24px;}
+.two-col{display:grid;gap:0;}.tc-40{grid-template-columns:40% 60%;}.tc-50{grid-template-columns:1fr 1fr;}
+.col-b{border-left:1px solid var(--border);}
+label.field{display:block;font-size:11px;font-weight:bold;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;}
+select,input[type=text],input[type=number],input[type=date],textarea{width:100%;border:1px solid #999;padding:8px 10px;font:14px Arial,sans-serif;color:var(--text);background:#fff;margin-bottom:12px;outline:none;}
+select:focus,input:focus,textarea:focus{border-color:var(--orange);border-width:2px;}
+textarea{resize:vertical;height:80px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;font:13px Arial,sans-serif;font-weight:bold;border-radius:2px;cursor:pointer;border:none;transition:background .2s;}
+.btn-a{background:var(--navy);color:#fff;}.btn-a:hover{background:#002244;}
+.btn-ghost{background:#fff;border:1px solid var(--navy);color:var(--navy);}.btn-ghost:hover{background:var(--navy);color:#fff;}
+.btn-sm{padding:6px 14px;font-size:12px;width:auto;}
+.btn-full{width:100%;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:20px;border:1px solid var(--border);}
+.stat-card{padding:14px 18px;border-right:1px solid var(--border);background:#fff;}.stat-card:last-child{border-right:none;}
+.sc-label{font-size:10px;font-weight:bold;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.sc-val{font-size:28px;font-weight:bold;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-size:11px;font-weight:bold;letter-spacing:.06em;}
+td{padding:9px 12px;border:1px solid #CCCCCC;}
+tr:nth-child(even) td{background:#F2F2F2;}
+tr:hover td{background:#FFFDE7;}
+.urg{display:inline-block;padding:2px 7px;font-size:10px;font-weight:bold;}
+.urg-h{background:#fde8e8;color:#b91c1c;}.urg-m{background:#fef9c3;color:#92400e;}.urg-l{background:#dcfce7;color:#166534;}
+.sp{display:inline-block;padding:2px 8px;font-size:10px;font-weight:bold;}
+.sp-p{background:#e9e6e0;color:#555;}.sp-ip{background:#FFF3E0;color:#D84315;}.sp-c{background:#dcfce7;color:#166534;}.sp-o{background:#fde8e8;color:#b91c1c;}
+.result-box{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:14px;margin-top:12px;}
+.rr{font-size:12px;color:var(--muted);margin-bottom:5px;}.rr span{color:var(--text);font-weight:bold;}
+.info-box{background:#EBF0FB;border:1px solid #C2D4F0;border-left:4px solid var(--navy);padding:14px 18px;font-size:13px;color:var(--navy);line-height:1.65;margin-top:16px;}
+/* Gantt */
+.gantt-row{display:flex;gap:4px;margin:14px 0;}
+.gantt-slot{flex:1;min-height:44px;border:1px dashed #999;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);background:#fff;}
+.gantt-slot.filled{background:var(--navy);color:#fff;border:1px solid var(--navy);font-weight:bold;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+/* Timeline */
+.timeline-bar{height:24px;border-radius:2px;position:absolute;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:bold;white-space:nowrap;animation:slideIn .3s ease;}
+/* Toast */
+.toast{position:fixed;top:80px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:2px;font-size:13px;font-weight:bold;z-index:600;opacity:0;transform:translateX(80px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(0);}
+.toast.error{background:#b91c1c;}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border:1px solid var(--border);border-radius:2px;max-width:520px;width:90%;padding:28px;position:relative;max-height:80vh;overflow-y:auto;}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+/* Huffman tree */
+.huf-node{font-size:10px;text-anchor:middle;}
+/* Matrix chain DP cells */
+.dp-cell{display:inline-flex;align-items:center;justify-content:center;width:52px;height:36px;border:1px solid #999;font-size:11px;text-align:center;background:#fff;}
+/* Editable table inputs */
+.edit-input{width:60px;margin:0;padding:4px 6px;font-size:12px;text-align:center;}
+.edit-input-wide{width:100%;margin:0;padding:4px 6px;font-size:12px;}
+/* Dispatch card */
+.dispatch-card{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);margin-bottom:6px;border-radius:2px;border-left:4px solid var(--navy);background:#fff;animation:slideIn .3s;}
+input[type=range]{width:100%;accent-color:var(--orange);margin:4px 0 12px;}
+</style>
+</head>
+<body>
+
+<!-- Government Utility Bar -->
+<div class="gov-utility">
+  <span>🇮🇳 Smart City Algorithm Engine — Department Portal</span>
+  <div><span>Logged in as: Dept Operator | Headquarters</span><a href="index.html">Logout</a></div>
+</div>
+
+<header class="topbar">
+  <div class="tb-left"><span class="tb-brand">SCAE</span><span class="tb-panel">/ Department Portal</span></div>
+  <div class="tb-right"><span class="tb-pill">DEPT OPERATOR ACCESS</span><span><span class="status-dot"></span>STATUS ONLINE</span></div>
+</header>
+
+<!-- Breadcrumb Bar -->
+<div class="breadcrumb-bar" id="breadcrumb"><a href="index.html">Home</a> &gt; Department Portal &gt; <span id="bc-panel" style="margin-left:4px;">Work Order Queue</span></div>
+
+<nav class="sidebar">
+  <div class="nav-section">Operations Menu</div>
+  <div class="nav-item active" data-panel="p01">Work Order Queue</div>
+  <div class="nav-item" data-panel="p02">Schedule Jobs</div>
+  <div class="nav-item" data-panel="p03">Activity Planner</div>
+  <div class="nav-item" data-panel="p04">Resource Allocator</div>
+  <div class="nav-item" data-panel="p05">Emergency Dispatch</div>
+  <div class="nav-item" data-panel="p06">Sensor Data Logging</div>
+  <div class="nav-item" data-panel="p07">Operations Optimization</div>
+  <div class="sidebar-footer"><div style="margin-bottom:6px;">Logged in as: <strong>Dept Operator</strong></div><a href="index.html">← Exit to Portal</a></div>
+</nav>
+
+<main class="main">
+
+<!-- P01: JOB QUEUE -->
+<div class="panel active" id="p01">
+  <div class="ph"><span class="ph-title">Work Order Queue</span></div>
+  <div class="pc">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="stat-row" style="flex:1;margin-bottom:0;">
+        <div class="stat-card"><div class="sc-label">Total Jobs</div><div class="sc-val" id="jq-total">12</div></div>
+        <div class="stat-card"><div class="sc-label">High Priority</div><div class="sc-val" id="jq-high">4</div></div>
+        <div class="stat-card"><div class="sc-label">In Progress</div><div class="sc-val" id="jq-ip">5</div></div>
+        <div class="stat-card"><div class="sc-label">Completed</div><div class="sc-val" id="jq-comp">3</div></div>
+      </div>
+      <button class="btn btn-a btn-sm" style="margin-left:14px;white-space:nowrap;" onclick="openJobModal()">+ Add New Job</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="sortJobs('urgency')">Sort by Priority</button>
+      <button class="btn btn-ghost btn-sm" onclick="sortJobs('deadline')">Sort by Deadline</button>
+      <button class="btn btn-a btn-sm" onclick="extractMax()">Assign Highest Priority</button>
+    </div>
+    <div id="sort-msg" style="font-size:11px;color:var(--navy);margin-bottom:8px;"></div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>ID</th><th>Title</th><th>Zone</th><th>Priority</th><th>Deadline</th><th>Crew</th><th>Status</th><th>Action</th></tr></thead><tbody id="jq-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- P02: JOB SCHEDULER -->
+<div class="panel" id="p02">
+  <div class="ph"><span class="ph-title">Schedule Jobs</span></div>
+  <div class="two-col tc-40">
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:4px;color:var(--navy);">Schedule Jobs by Deadline & Priority</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Automated scheduling system for maximizing task completion before deadlines.</p>
+      <table><thead><tr><th>Job</th><th>Deadline</th><th>Priority Rating</th></tr></thead><tbody id="js-tbody"></tbody></table>
+      <button class="btn btn-ghost btn-sm" style="margin:10px 0;" onclick="addJSRow()">+ Add Row</button>
+      <button class="btn btn-a btn-full" onclick="runJobSeq()">Generate Schedule</button>
+    </div>
+    <div class="col-b" style="padding:20px;">
+      <label class="field">Schedule (Time Slots)</label>
+      <div id="js-gantt" class="gantt-row"></div>
+      <div id="js-result" style="margin-top:14px;font-size:13px;color:var(--muted);">Run the system to see results.</div>
+      <div class="info-box">The system automatically calculates the most efficient schedule, ensuring high-priority tasks are grouped effectively before their respective deadlines.</div>
+    </div>
+  </div>
+</div>
+
+<!-- P03: ACTIVITY PLANNER -->
+<div class="panel" id="p03">
+  <div class="ph"><span class="ph-title">Activity Planner</span></div>
+  <div class="pc">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Schedule maximum non-overlapping city maintenance activities.</p>
+    <table style="max-width:600px;margin-bottom:12px;"><thead><tr><th>Activity</th><th>Start</th><th>End</th></tr></thead><tbody id="as-tbody"></tbody></table>
+    <button class="btn btn-ghost btn-sm" onclick="addASRow()" style="margin-bottom:12px;">+ Add Activity</button>
+    <button class="btn btn-a btn-sm" onclick="runActivitySel()" style="margin-bottom:20px;">Generate Activity Plan</button>
+    <label class="field">Timeline (06:00 – 16:00)</label>
+    <div id="as-timeline" style="position:relative;height:200px;border:1px solid var(--border);background:var(--bg);border-radius:3px;margin-bottom:14px;overflow:hidden;"></div>
+    <div id="as-result" style="font-size:13px;color:var(--muted);"></div>
+    <div class="info-box">The automated activity planner ensures that the maximum number of activities can be scheduled in a day without any overlaps, maximizing crew efficiency.</div>
+  </div>
+</div>
+
+<!-- P04: RESOURCE ALLOCATOR -->
+<div class="panel" id="p04">
+  <div class="ph"><span class="ph-title">Resource Allocator</span></div>
+  <div class="two-col tc-50">
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:4px;color:var(--navy);">Emergency Supply Truck Loading</h3>
+      <label class="field" style="margin-top:12px;">Truck Capacity (kg)</label>
+      <input type="number" id="fk-cap" value="500"/>
+      <table><thead><tr><th>Item</th><th>Weight (kg)</th><th>Value</th><th>Priority Score</th></tr></thead><tbody id="fk-tbody"></tbody></table>
+      <button class="btn btn-a btn-full" style="margin-top:12px;" onclick="runFracKnapsack()">Allocate Resources</button>
+    </div>
+    <div class="col-b" style="padding:20px;">
+      <canvas id="fk-chart" style="max-height:200px;margin-bottom:14px;"></canvas>
+      <div id="fk-result" style="font-size:13px;color:var(--muted);">Run the system to see allocation.</div>
+      <div class="info-box">The system prioritizes items by their value-to-weight ratio, loading the most crucial supplies first to maximize the effectiveness of the emergency response within the truck's capacity.</div>
+    </div>
+  </div>
+</div>
+
+<!-- P05: EMERGENCY DISPATCH -->
+<div class="panel" id="p05">
+  <div class="ph"><span class="ph-title">Emergency Dispatch</span></div>
+  <div class="pc">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Triage and dispatch emergency repair crews by complaint priority level.</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="btn btn-a btn-sm" onclick="genEmergencies()">Generate 10 Emergency Cases</button>
+      <button class="btn btn-ghost btn-sm" onclick="sortEmergencies('heap')">Sort by Priority</button>
+      <button class="btn btn-ghost btn-sm" onclick="sortEmergencies('counting')">Sort by Zone</button>
+      <button class="btn btn-a btn-sm" onclick="dispatchNext()">Dispatch Next Crew</button>
+    </div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>Type</th><th>Zone</th><th>Priority</th><th>Time</th><th>Crew</th><th>Status</th></tr></thead><tbody id="em-tbody"></tbody></table></div>
+    <canvas id="em-chart" style="max-height:180px;margin-top:14px;"></canvas>
+    <div id="em-count" style="margin-top:14px;"></div>
+    <label class="field" style="margin-top:20px;">Dispatched History</label>
+    <div id="em-history"></div>
+  </div>
+</div>
+
+<!-- P06: SENSOR DATA LOGGING -->
+<div class="panel" id="p06">
+  <div class="ph"><span class="ph-title">Sensor Data Logging</span></div>
+  <div class="pc">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Compress city sensor readings for efficient data storage and transmission.</p>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="setHufSample('traffic')">Traffic Data</button>
+      <button class="btn btn-ghost btn-sm" onclick="setHufSample('air')">Air Quality</button>
+      <button class="btn btn-ghost btn-sm" onclick="setHufSample('temp')">Temperature</button>
+    </div>
+    <textarea id="huf-input" style="height:60px;">aaabbbccddeeaabcdeabcabc</textarea>
+    <button class="btn btn-a btn-full" onclick="runHuffman()">Compress Sensor Data</button>
+    <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-top:16px;" id="huf-stats">
+      <div class="stat-card"><div class="sc-label">Original Size</div><div class="sc-val" style="font-size:18px;" id="huf-orig">—</div></div>
+      <div class="stat-card"><div class="sc-label">Compressed Size</div><div class="sc-val" style="font-size:18px;" id="huf-comp">—</div></div>
+      <div class="stat-card"><div class="sc-label">Space Saved</div><div class="sc-val" style="font-size:18px;color:var(--green);" id="huf-saved">—</div></div>
+      <div class="stat-card"><div class="sc-label">Compression Ratio</div><div class="sc-val" style="font-size:18px;" id="huf-ratio">—</div></div>
+    </div>
+    <div class="two-col tc-50" style="gap:16px;margin-top:14px;">
+      <div><label class="field">Signal Frequency Table</label><div id="huf-freq" style="overflow:auto;max-height:200px;"></div></div>
+      <div><label class="field">Encoded Keys</label><div id="huf-codes" style="overflow:auto;max-height:200px;"></div></div>
+    </div>
+    <label class="field" style="margin-top:16px;">Encoding Structure</label>
+    <svg id="huf-tree" style="width:100%;height:300px;background:var(--bg);border:1px solid var(--border);"></svg>
+  </div>
+</div>
+
+<!-- P07: OPERATIONS OPTIMIZATION -->
+<div class="panel" id="p07">
+  <div class="ph"><span class="ph-title">Operations Optimization</span></div>
+  <div class="pc">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Find the optimal sequencing order for multiplying city data processing matrices.</p>
+    <label class="field">Matrix Dimensions</label>
+    <div id="mc-dims" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div id="mc-labels" style="font-size:12px;color:var(--muted);margin-bottom:14px;"></div>
+    <button class="btn btn-a btn-sm" onclick="runMatrixChain()" style="margin-bottom:16px;">Find Optimal Order</button>
+    <label class="field">Cost Analysis Table</label>
+    <div id="mc-table" style="overflow:auto;margin-bottom:14px;"></div>
+    <div id="mc-result" style="font-size:13px;color:var(--muted);"></div>
+    <div class="info-box">The system finds the most efficient sequence for processing multiple data sets, minimizing the total number of computational operations required. Results help optimize data pipeline performance for city services.</div>
+  </div>
+</div>
+
+</main>
+<div class="modal-overlay" id="modal"><div class="modal-box"><button class="modal-close" onclick="closeModal()">×</button><div id="modal-content"></div></div></div>
+<div class="toast" id="toast"></div>
+<script src="js/dept.js"></script>
+</body>
+</html>

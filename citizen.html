@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCAE — Citizen Portal</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #003366;
+      --orange: #FF6600;
+      --green: #2E7D32;
+      --border: #CCCCCC;
+      --bg: #F2F2F2;
+      --text: #212121;
+      --muted: #666666;
+      --mono: 'Courier New', monospace;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: #F2F2F2;
+    }
+
+    /* Utility bar */
+    .gov-utility {
+      background: #003366;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .85);
+    }
+
+    .gov-utility a {
+      color: rgba(255, 255, 255, .85);
+      text-decoration: none;
+      margin-left: 12px;
+    }
+
+    .gov-utility a:hover {
+      text-decoration: underline;
+      color: #fff;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: fixed;
+      top: 32px;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 200;
+    }
+
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tb-brand {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--navy);
+    }
+
+    .tb-panel {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-bar {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: #FFF3E0;
+      border-bottom: 1px solid #FFAB40;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 12px;
+      color: #D84315;
+      z-index: 199;
+    }
+
+    .breadcrumb-bar a {
+      color: #D84315;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .breadcrumb-bar a:hover {
+      text-decoration: underline;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 116px;
+      left: 0;
+      width: 220px;
+      height: calc(100vh - 116px);
+      background: #fff;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .nav-section {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .15em;
+      color: #999;
+      padding: 16px 16px 6px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: block;
+      padding: 9px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+
+    .nav-item-hi {
+      display: block;
+      font-size: 10px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .nav-item:hover {
+      background: #F2F2F2;
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: #F0F4FF;
+      border-left-color: var(--orange);
+      color: var(--navy);
+      font-weight: bold;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sidebar-footer a {
+      color: var(--navy);
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    .sidebar-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Main */
+    .main {
+      margin-left: 220px;
+      padding-top: 116px;
+      min-height: 100vh;
+      background: #fff;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .ph {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 116px;
+      z-index: 50;
+    }
+
+    .ph-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--navy);
+    }
+
+    .ph-title::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: var(--orange);
+      margin-top: 6px;
+    }
+
+    .ph-hi {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .pc {
+      padding: 24px;
+    }
+
+    .two-col {
+      display: grid;
+      gap: 0;
+    }
+
+    .tc-65 {
+      grid-template-columns: 65% 35%;
+    }
+
+    .tc-50 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .col-b {
+      border-left: 1px solid var(--border);
+    }
+
+    label.field {
+      display: block;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .field-hi {
+      font-size: 10px;
+      font-weight: normal;
+      color: #888;
+      text-transform: none;
+      letter-spacing: normal;
+      margin-left: 4px;
+    }
+
+    select,
+    input[type=text],
+    input[type=number],
+    textarea {
+      width: 100%;
+      border: 1px solid #999;
+      padding: 8px 10px;
+      font: 14px Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--orange);
+      border-width: 2px;
+    }
+
+    textarea {
+      resize: vertical;
+      height: 100px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      font: 13px Arial, sans-serif;
+      font-weight: bold;
+      border-radius: 2px;
+      cursor: pointer;
+      border: none;
+      transition: background .2s;
+    }
+
+    .btn-g {
+      background: var(--navy);
+      color: #fff;
+      width: 100%;
+    }
+
+    .btn-g:hover {
+      background: #002244;
+    }
+
+    .btn-ghost {
+      background: #fff;
+      border: 1px solid var(--navy);
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .btn-ghost:hover {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 12px;
+      width: auto;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-card {
+      padding: 14px 18px;
+      border-right: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .stat-card:last-child {
+      border-right: none;
+    }
+
+    .sc-label {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 4px;
+    }
+
+    .sc-val {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--navy);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .06em;
+    }
+
+    td {
+      padding: 9px 12px;
+      border: 1px solid #CCCCCC;
+    }
+
+    tr:nth-child(even) td {
+      background: #F2F2F2;
+    }
+
+    tr:hover td {
+      background: #FFFDE7;
+    }
+
+    .urg {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .urg-h {
+      background: #fde8e8;
+      color: #b91c1c;
+    }
+
+    .urg-m {
+      background: #fef9c3;
+      color: #92400e;
+    }
+
+    .urg-l {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .urg-c {
+      background: #fde8e8;
+      color: #7f1d1d;
+    }
+
+    .sp {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .sp-p {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .sp-ip {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .sp-r {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .result-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .rr {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .rr span {
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .info-box {
+      background: #EBF0FB;
+      border: 1px solid #C2D4F0;
+      border-left: 4px solid var(--navy);
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--navy);
+      line-height: 1.65;
+      margin-top: 16px;
+    }
+
+    .info-box.hi {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .callout {
+      background: #FFF3E0;
+      border-left: 4px solid #FFAB40;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #D84315;
+      line-height: 1.6;
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin: 14px 0;
+    }
+
+    .switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      display: inline-block;
+    }
+
+    .switch input {
+      display: none;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: .3s;
+    }
+
+    .slider::before {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .3s;
+    }
+
+    .switch input:checked+.slider {
+      background: var(--orange);
+    }
+
+    .switch input:checked+.slider::before {
+      transform: translateX(18px);
+    }
+
+    #route-map {
+      background: #fff;
+      border: 1px solid var(--border);
+      width: 100%;
+      height: 520px;
+      display: block;
+    }
+
+    .mini-map {
+      background: #fff;
+      border: 1px solid var(--border);
+      width: 100%;
+      height: 300px;
+      display: block;
+    }
+
+    .sys-ol {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .tech-strip,
+    .tech-toggle,
+    .tech-body {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Government Utility Bar -->
+  <div class="gov-utility">
+    <span>🇮🇳 Smart City Algorithm Engine — Citizen Portal | स्मार्ट सिटी नागरिक पोर्टल</span>
+    <div><span>Logged in as: Citizen | Sector 4</span><a href="index.html">Logout / लॉग आउट</a></div>
+  </div>
+
+  <header class="topbar">
+    <div class="tb-left"><span class="tb-brand">SCAE</span><span class="tb-panel">/ Citizen Portal (नागरिक
+        पोर्टल)</span></div>
+    <div class="tb-right"><span style="color:var(--muted);">Welcome, Citizen</span><span style="margin-left:10px;"><span
+          class="status-dot"></span>System Online</span></div>
+  </header>
+
+  <!-- Breadcrumb Bar -->
+  <div class="breadcrumb-bar" id="breadcrumb"><a href="index.html">Home</a> &gt; Citizen Portal &gt; <span
+      id="bc-panel">Find My Route / मार्ग खोजें</span></div>
+
+  <nav class="sidebar">
+    <div class="nav-section">Main Menu / मुख्य मेनू</div>
+    <div class="nav-item active" data-panel="p01">Find My Route<span class="nav-item-hi">मार्ग खोजें</span></div>
+    <div class="nav-item" data-panel="p02">File a Complaint<span class="nav-item-hi">शिकायत दर्ज करें</span></div>
+    <div class="nav-item" data-panel="p03">My Complaint History<span class="nav-item-hi">मेरी शिकायत का इतिहास</span>
+    </div>
+    <div class="nav-item" data-panel="p04">Find City Services<span class="nav-item-hi">शहर सेवाएं खोजें</span></div>
+    <div class="nav-item" data-panel="p05">My Zone Information<span class="nav-item-hi">मेरे क्षेत्र की जानकारी</span>
+    </div>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:6px;">Logged in as: <strong>Citizen</strong></div><a href="index.html">← Exit to
+        Portal</a>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- P01 -->
+    <div class="panel active" id="p01">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Find My Route</div>
+          <div class="ph-hi">मार्ग खोजें</div>
+        </div>
+      </div>
+      <div class="two-col tc-65">
+        <div style="padding:16px;position:relative;"><svg id="route-map" viewBox="0 0 620 650"></svg></div>
+        <div class="col-b" style="padding:20px;">
+          <label class="field">Starting Point <span class="field-hi">कहाँ से</span></label><select id="d-src"></select>
+          <label class="field">Destination <span class="field-hi">कहाँ जाना है</span></label><select
+            id="d-dst"></select>
+          <button class="btn btn-g" onclick="runDijkstra()">Get Directions</button>
+          <div class="result-box">
+            <div class="rr">Your Route / आपका मार्ग: <span id="d-path">Select a starting point and destination
+                above.</span></div>
+            <div class="rr">Total Distance / कुल दूरी: <span id="d-dist">—</span></div>
+            <div class="rr">Calculated in / गणना का समय: <span id="d-time">—</span></div>
+          </div>
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+          <div class="switch-row"><label class="switch"><input type="checkbox" id="bf-toggle"
+                onchange="toggleBF()"><span class="slider"></span></label><span>Check for Road Closures? (सड़क बंद
+              है?)</span></div>
+          <div id="bf-result"></div>
+          <div class="info-box">Your route is calculated to be the fastest possible. If a road closure is active, the
+            system automatically finds an alternate route.<div class="info-box hi">आपका मार्ग सबसे तेज गणना किया गया है।
+              यदि कोई सड़क बंद है, तो सिस्टम स्वचालित रूप से एक वैकल्पिक मार्ग ढूंढता है।</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P02 -->
+    <div class="panel" id="p02">
+      <div class="ph">
+        <div>
+          <div class="ph-title">File a Complaint</div>
+          <div class="ph-hi">शिकायत दर्ज करें</div>
+        </div>
+      </div>
+      <div class="two-col tc-50">
+        <div style="padding:24px;">
+          <h3 style="margin-bottom:16px;color:var(--navy);">Submit a New Complaint</h3>
+          <label class="field">Category <span class="field-hi">श्रेणी</span></label>
+          <select id="fc-cat">
+            <option>Road Damage</option>
+            <option>Power Outage</option>
+            <option>Water Supply</option>
+            <option>Safety Issue</option>
+            <option>Sanitation</option>
+            <option>Other</option>
+          </select>
+          <label class="field">Location <span class="field-hi">स्थान</span></label><select id="fc-loc"></select>
+          <label class="field">Priority Level <span class="field-hi">प्राथमिकता स्तर</span>: <span id="urg-val"
+              style="font-size:18px;color:var(--navy);">5</span> <span id="urg-label">(Medium)</span></label>
+          <input type="range" id="fc-urg" min="1" max="10" value="5" oninput="updateUrg()">
+          <label class="field">Description <span class="field-hi">विवरण</span><span id="char-ct"
+              style="float:right;font-weight:400;text-transform:none;">0/500</span></label>
+          <textarea id="fc-desc" maxlength="500"
+            oninput="document.getElementById('char-ct').textContent=this.value.length+'/500';"
+            placeholder="Describe the issue in detail..."></textarea>
+          <label class="field">Your Name <span class="field-hi">आपका नाम</span></label><input type="text" id="fc-name"
+            placeholder="Full name" />
+          <label class="field">Contact <span class="field-hi">संपर्क (वैकल्पिक)</span></label><input type="text"
+            id="fc-contact" placeholder="Phone or email" />
+          <button class="btn btn-g" onclick="submitComplaint()">Submit Complaint</button>
+        </div>
+        <div class="col-b" style="padding:24px;background:var(--bg);">
+          <h3 style="margin-bottom:16px;color:var(--navy);">How It Works</h3>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;"><span
+                style="background:var(--navy);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;">1</span>
+              <div><strong style="font-size:13px;color:var(--navy)">Complaint Received</strong>
+                <p style="font-size:12px;color:var(--muted);">Your complaint is received and timestamped.</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><span
+                style="background:var(--navy);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;">2</span>
+              <div><strong style="font-size:13px;color:var(--navy)">Sorted by Priority</strong>
+                <p style="font-size:12px;color:var(--muted);">Placed in the queue according to priority level.</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><span
+                style="background:var(--navy);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;">3</span>
+              <div><strong style="font-size:13px;color:var(--navy)">Assigned to Department</strong>
+                <p style="font-size:12px;color:var(--muted);">Operators handle issues quickly.</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;"><span
+                style="background:var(--navy);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0;">4</span>
+              <div><strong style="font-size:13px;color:var(--navy)">Status Updates</strong>
+                <p style="font-size:12px;color:var(--muted);">You receive updates as status changes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="info-box" style="margin-top:18px;">Your complaint is automatically placed in the correct position
+            for civic action.<div class="info-box hi">आपकी शिकायत नागरिक कार्रवाई के लिए स्वचालित रूप से सही स्थान पर
+              रखी गई है।</div>
+          </div>
+          <div style="margin-top:18px;font-size:12px;">
+            <strong>Priority Guide:</strong><br /><span class="urg urg-l">1–3 Low</span> Minor issue,
+            non-urgent<br /><span class="urg urg-m">4–6 Medium</span> Needs attention within days<br /><span
+              class="urg urg-h">7–8 High</span> Immediate action needed<br /><span class="urg urg-c">9–10
+              Critical</span> Emergency / danger to life
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P03 -->
+    <div class="panel" id="p03">
+      <div class="ph">
+        <div>
+          <div class="ph-title">My Complaint History</div>
+          <div class="ph-hi">मेरी शिकायत का इतिहास</div>
+        </div>
+      </div>
+      <div class="pc">
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input type="text" id="mc-q" placeholder="Search by Complaint ID... (शिकायत आईडी खोजें)"
+            style="margin:0;flex:1;" />
+          <button class="btn btn-g btn-sm" onclick="searchComplaint('binary')" style="width:auto;">Search /
+            खोजें</button>
+          <button class="btn btn-ghost btn-sm" onclick="searchComplaint('linear')" style="width:auto;">Search All
+            Records</button>
+        </div>
+        <div id="search-result"></div>
+        <div class="stat-row" style="grid-template-columns:repeat(3,1fr);margin-top:14px;">
+          <div class="stat-card">
+            <div class="sc-label">Total Filed <span class="field-hi" style="display:block;margin:2px 0 0">कुल
+                दर्ज</span></div>
+            <div class="sc-val" id="mc-total">5</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Pending <span class="field-hi" style="display:block;margin:2px 0 0">लंबित</span></div>
+            <div class="sc-val" id="mc-pending">2</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Resolved <span class="field-hi" style="display:block;margin:2px 0 0">हल हो गया</span>
+            </div>
+            <div class="sc-val" id="mc-resolved">3</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="sortMC('urgency')">Sort by Priority / प्राथमिकता</button>
+          <button class="btn btn-ghost btn-sm" onclick="sortMC('date')">Sort by Date / तिथि</button>
+          <button class="btn btn-ghost btn-sm" onclick="sortMC('status')">Sort by Status / स्थिति</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Area</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="mc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- P04 -->
+    <div class="panel" id="p04">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Find City Services</div>
+          <div class="ph-hi">शहर सेवाएं खोजें</div>
+        </div>
+      </div>
+      <div class="pc">
+        <div style="max-width:600px;margin:0 auto 20px;text-align:center;">
+          <input type="text" id="ss-q" placeholder="Search city services... (शहर सेवाएं खोजें)"
+            style="font-size:16px;padding:12px;margin-bottom:10px;text-align:center;" />
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button class="btn btn-g btn-sm" onclick="serviceSearch('binary')">Quick Search / त्वरित खोज</button>
+            <button class="btn btn-ghost btn-sm" onclick="serviceSearch('linear')">Deep Search / विस्तृत खोज</button>
+          </div>
+        </div>
+        <div id="ss-result"></div>
+        <div style="margin-top:20px;overflow-x:auto;">
+          <table id="ss-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Service / सेवा</th>
+                <th>Area / क्षेत्र</th>
+              </tr>
+            </thead>
+            <tbody id="ss-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- P05 -->
+    <div class="panel" id="p05">
+      <div class="ph">
+        <div>
+          <div class="ph-title">My Zone Information</div>
+          <div class="ph-hi">मेरे क्षेत्र की जानकारी</div>
+        </div>
+      </div>
+      <div class="two-col tc-50">
+        <div style="padding:20px;">
+          <div style="position:relative;"><svg id="bfs-map" class="mini-map" viewBox="0 0 620 500"></svg></div>
+          <label class="field" style="margin-top:14px;">Your Zone <span class="field-hi">आपका
+              क्षेत्र</span></label><select id="bfs-src"></select>
+          <label class="field">Show Services Within <span class="field-hi">के भीतर सेवाएं दिखाएं</span>: <span
+              id="hop-val" style="font-weight:700;color:var(--navy);">2</span> stops</label>
+          <input type="range" id="bfs-hops" min="1" max="3" value="2"
+            oninput="document.getElementById('hop-val').textContent=this.value">
+          <button class="btn btn-g" onclick="runBFS()">Show Reachable Zones / पहुँच योग्य क्षेत्र दिखाएं</button>
+          <div class="info-box" style="margin-top:14px;">The system explores zones level by level from your location.
+            Each stop represents one road segment. Useful for finding nearest services and checking area connectivity.
+            <div class="info-box hi">सिस्टम आपके स्थान से स्तर दर स्तर क्षेत्रों की पड़ताल करता है। प्रत्येक स्टॉप एक
+              सड़क खंड का प्रतिनिधित्व करता है।</div>
+          </div>
+        </div>
+        <div class="col-b" style="padding:20px;">
+          <h3 style="margin-bottom:14px;color:var(--navy);">Reachable Zones <span
+              style="font-size:14px;color:var(--muted);font-weight:normal;">/ पहुँच योग्य क्षेत्र</span></h3>
+          <div id="bfs-result">
+            <p style="font-size:13px;color:var(--muted);">Select your zone and click "Show Reachable Zones" to see
+              nearby services. (आस-पास की सेवाएं देखने के लिए अपना क्षेत्र चुनें)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box"><button class="modal-close" onclick="closeModal()">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="js/map.js"></script>
+  <script src="js/citizen.js"></script>
+</body>
+
+</html>
