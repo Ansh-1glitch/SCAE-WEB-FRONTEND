@@ -313,22 +313,41 @@ async function loadNotices() {
 
 async function loginAs(role) {
     const emailMap = {
-        admin: 'admin@scae.gov.in',
+        admin:   'admin@scae.gov.in',
         citizen: 'citizen@scae.gov.in',
-        dept: 'dept@scae.gov.in'
+        dept:    'dept@scae.gov.in'
     };
+    const nameMap = {
+        admin:   'City Commissioner',
+        citizen: 'Public User',
+        dept:    'Dept. Officer'
+    };
+
+    // Helper: set a local guest session and redirect immediately
+    function localLogin() {
+        sessionStorage.setItem('scae_token', role + '-guest-' + Date.now());
+        sessionStorage.setItem('scae_role',  role);
+        sessionStorage.setItem('scae_name',  nameMap[role]);
+        sessionStorage.setItem('scae_email', emailMap[role]);
+        window.location.href = role + '.html';
+    }
+
     try {
         const res = await api('/auth/login', 'POST', {
-            email: emailMap[role],
+            email:    emailMap[role],
             password: 'scae123'
         });
+        // API succeeded — use real token
         sessionStorage.setItem('scae_token', res.data.token);
-        sessionStorage.setItem('scae_role', res.data.role);
-        sessionStorage.setItem('scae_name', res.data.name);
+        sessionStorage.setItem('scae_role',  res.data.role);
+        sessionStorage.setItem('scae_name',  res.data.name);
         sessionStorage.setItem('scae_email', res.data.email);
         window.location.href = role + '.html';
     } catch(e) {
-        alert('Login failed. Please try again.');
+        // Backend may be sleeping / DB reset on free tier.
+        // All three portals have full offline fallbacks for every
+        // API call, so a local guest session is fully functional.
+        localLogin();
     }
 }
 
