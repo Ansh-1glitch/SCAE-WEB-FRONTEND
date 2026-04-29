@@ -1,0 +1,5 @@
+[
+  {"id": 1, "type": "traffic", "raw_data": "aabbbcccdddeeeffgg", "timestamp": "2026-04-25T08:00:00Z", "zone": "North"},
+  {"id": 2, "type": "air",     "raw_data": "aaabbbccddeeee",     "timestamp": "2026-04-25T09:00:00Z", "zone": "Central"},
+  {"id": 3, "type": "temp",    "raw_data": "aabbcddeeefff",      "timestamp": "2026-04-25T10:00:00Z", "zone": "East"}
+]

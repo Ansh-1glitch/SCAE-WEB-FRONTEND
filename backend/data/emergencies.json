@@ -1,0 +1,7 @@
+[
+  {"id": 1, "type": "Road Accident", "zone": "North",   "urgency": 10, "time": "08:30", "crew": "Crew Alpha", "status": "Dispatched"},
+  {"id": 2, "type": "Fire Outbreak", "zone": "East",    "urgency": 9,  "time": "09:15", "crew": "Crew Beta",  "status": "Resolved"},
+  {"id": 3, "type": "Power Failure", "zone": "Central", "urgency": 7,  "time": "10:00", "crew": null,         "status": "Queued"},
+  {"id": 4, "type": "Flood Alert",   "zone": "South",   "urgency": 8,  "time": "11:30", "crew": null,         "status": "Queued"},
+  {"id": 5, "type": "Water Burst",   "zone": "West",    "urgency": 6,  "time": "12:00", "crew": "Crew Gamma", "status": "Dispatched"}
+]

@@ -1,0 +1,12 @@
+[
+  {"id": "s001", "name": "City General Hospital",     "zone": "Medical Hub",  "type": "Hospital",  "node_id": 9,  "phone": "0135-2710000"},
+  {"id": "s002", "name": "Central Fire Station",      "zone": "Central",      "type": "Emergency", "node_id": 0,  "phone": "101"},
+  {"id": "s003", "name": "North Gate Police Post",    "zone": "North",        "type": "Police",    "node_id": 1,  "phone": "100"},
+  {"id": "s004", "name": "City Hall Admin Office",    "zone": "West",         "type": "Govt",      "node_id": 2,  "phone": "0135-2654321"},
+  {"id": "s005", "name": "GEU University",            "zone": "West",         "type": "Education", "node_id": 4,  "phone": "0135-2770137"},
+  {"id": "s006", "name": "Tech Park Clinic",          "zone": "East",         "type": "Hospital",  "node_id": 10, "phone": "0135-2711111"},
+  {"id": "s007", "name": "River Road Bus Stand",      "zone": "South",        "type": "Transport", "node_id": 7,  "phone": "0135-2622222"},
+  {"id": "s008", "name": "East Market Police Chowk", "zone": "South-East",   "type": "Police",    "node_id": 8,  "phone": "100"},
+  {"id": "s009", "name": "Sports Complex Stadium",    "zone": "South-East",   "type": "Sports",    "node_id": 12, "phone": "0135-2733333"},
+  {"id": "s010", "name": "Industrial Zone Clinic",    "zone": "South-West",   "type": "Hospital",  "node_id": 11, "phone": "0135-2744444"}
+]

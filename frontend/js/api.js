@@ -1,9 +1,8 @@
-const BASE_URL = "https://daa-7.onrender.com/api";
+const BASE_URL = "http://localhost:8000/api";
 
 function getToken() {
     return sessionStorage.getItem("scae_token");
 }
-
 // Guest tokens are set by the offline-fallback login (not real JWTs).
 // Real JWTs from the backend always start with "eyJ".
 function isGuestToken(token) {

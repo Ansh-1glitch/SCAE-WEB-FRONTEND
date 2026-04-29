@@ -1,0 +1,15 @@
+[
+  {"id": 0,  "label": "Central Junction", "x": 310, "y": 260, "zone": "Central"},
+  {"id": 1,  "label": "North Gate",       "x": 310, "y": 80,  "zone": "North"},
+  {"id": 2,  "label": "City Hall",        "x": 160, "y": 160, "zone": "West"},
+  {"id": 3,  "label": "Market Square",    "x": 460, "y": 160, "zone": "East"},
+  {"id": 4,  "label": "University",       "x": 100, "y": 260, "zone": "West"},
+  {"id": 5,  "label": "Downtown",         "x": 460, "y": 260, "zone": "East"},
+  {"id": 6,  "label": "Old Town",         "x": 160, "y": 360, "zone": "South-West"},
+  {"id": 7,  "label": "River Road",       "x": 310, "y": 380, "zone": "South"},
+  {"id": 8,  "label": "East Market",      "x": 460, "y": 360, "zone": "South-East"},
+  {"id": 9,  "label": "Medical Hub",      "x": 220, "y": 180, "zone": "Central"},
+  {"id": 10, "label": "Tech District",    "x": 400, "y": 180, "zone": "East"},
+  {"id": 11, "label": "Industrial Zone",  "x": 100, "y": 380, "zone": "South-West"},
+  {"id": 12, "label": "Sports Complex",   "x": 520, "y": 380, "zone": "South-East"}
+]

@@ -1,0 +1,21 @@
+[
+  {"id": 0,  "node_u": 0, "node_v": 1,  "weight": 4, "is_closed": false},
+  {"id": 1,  "node_u": 0, "node_v": 2,  "weight": 3, "is_closed": false},
+  {"id": 2,  "node_u": 0, "node_v": 3,  "weight": 3, "is_closed": false},
+  {"id": 3,  "node_u": 0, "node_v": 7,  "weight": 3, "is_closed": false},
+  {"id": 4,  "node_u": 1, "node_v": 9,  "weight": 2, "is_closed": false},
+  {"id": 5,  "node_u": 1, "node_v": 10, "weight": 2, "is_closed": false},
+  {"id": 6,  "node_u": 2, "node_v": 4,  "weight": 2, "is_closed": false},
+  {"id": 7,  "node_u": 2, "node_v": 9,  "weight": 2, "is_closed": false},
+  {"id": 8,  "node_u": 3, "node_v": 5,  "weight": 2, "is_closed": false},
+  {"id": 9,  "node_u": 3, "node_v": 10, "weight": 2, "is_closed": false},
+  {"id": 10, "node_u": 4, "node_v": 6,  "weight": 2, "is_closed": false},
+  {"id": 11, "node_u": 4, "node_v": 11, "weight": 3, "is_closed": false},
+  {"id": 12, "node_u": 5, "node_v": 8,  "weight": 2, "is_closed": false},
+  {"id": 13, "node_u": 6, "node_v": 7,  "weight": 2, "is_closed": false},
+  {"id": 14, "node_u": 6, "node_v": 11, "weight": 2, "is_closed": false},
+  {"id": 15, "node_u": 7, "node_v": 8,  "weight": 2, "is_closed": false},
+  {"id": 16, "node_u": 7, "node_v": 12, "weight": 3, "is_closed": false},
+  {"id": 17, "node_u": 8, "node_v": 12, "weight": 2, "is_closed": false},
+  {"id": 18, "node_u": 9, "node_v": 10, "weight": 1, "is_closed": false}
+]

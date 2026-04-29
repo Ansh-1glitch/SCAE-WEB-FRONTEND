@@ -325,6 +325,28 @@ const CAT_PILLS={
   SAFETY:`<span class="cat-pill cat-safety">🛡️ Safety</span>`,
 };
 function renderComplaints(data){
+  const tot = data.length;
+  const urg = data.filter(c => c.urg >= 8).length;
+  const res = data.filter(c => c.status === 'Resolved').length;
+  const pen = tot - res;
+
+  const stTot = document.getElementById('stat-tot'); if(stTot) stTot.textContent = tot;
+  const stUrg = document.getElementById('stat-urg'); if(stUrg) stUrg.textContent = urg;
+  const stRes = document.getElementById('stat-res'); if(stRes) stRes.textContent = res;
+  const stPen = document.getElementById('stat-pen'); if(stPen) stPen.textContent = pen;
+
+  if (tot > 0) {
+    const bt = document.getElementById('stat-tot-bar'); if(bt) bt.style.width = '100%';
+    const bu = document.getElementById('stat-urg-bar'); if(bu) bu.style.width = Math.round((urg/tot)*100) + '%';
+    const br = document.getElementById('stat-res-bar'); if(br) br.style.width = Math.round((res/tot)*100) + '%';
+    const bp = document.getElementById('stat-pen-bar'); if(bp) bp.style.width = Math.round((pen/tot)*100) + '%';
+  } else {
+    const bt = document.getElementById('stat-tot-bar'); if(bt) bt.style.width = '0%';
+    const bu = document.getElementById('stat-urg-bar'); if(bu) bu.style.width = '0%';
+    const br = document.getElementById('stat-res-bar'); if(br) br.style.width = '0%';
+    const bp = document.getElementById('stat-pen-bar'); if(bp) bp.style.width = '0%';
+  }
+
   const lbl=document.getElementById('c-count-label');
   if(lbl) lbl.textContent=`Showing ${data.length} complaint${data.length!==1?'s':''}`;
   document.getElementById('complaints-tbody').innerHTML=data.map(r=>

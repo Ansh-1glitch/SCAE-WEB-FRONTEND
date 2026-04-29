@@ -1,0 +1,8 @@
+[
+  {"id": "p001", "name": "Road Repair Phase 1",    "cost": 120, "benefit": 85, "category": "Infrastructure", "active": true},
+  {"id": "p002", "name": "Solar Street Lights",     "cost": 80,  "benefit": 70, "category": "Energy",         "active": true},
+  {"id": "p003", "name": "Water Pipeline Upgrade",  "cost": 200, "benefit": 95, "category": "Utilities",      "active": true},
+  {"id": "p004", "name": "CCTV Network Expansion",  "cost": 150, "benefit": 80, "category": "Safety",         "active": true},
+  {"id": "p005", "name": "Public Park Development", "cost": 60,  "benefit": 50, "category": "Civic",          "active": true},
+  {"id": "p006", "name": "Smart Traffic Signals",   "cost": 180, "benefit": 90, "category": "Traffic",        "active": true}
+]

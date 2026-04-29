@@ -1,0 +1,6 @@
+[
+  {"id": "WO-001", "title": "Fix pothole North Gate", "zone": "North",   "urgency": 8, "deadline": "2026-04-28", "crew": "Crew Alpha", "status": "Pending",     "description": "Pothole repair near signal"},
+  {"id": "WO-002", "title": "Street light repair",    "zone": "Central", "urgency": 6, "deadline": "2026-04-27", "crew": "Crew Beta",  "status": "In Progress", "description": "3 lights not working"},
+  {"id": "WO-003", "title": "Water pipe repair MG",   "zone": "West",    "urgency": 9, "deadline": "2026-04-25", "crew": "Crew Gamma", "status": "Completed",   "description": "Leakage fixed"},
+  {"id": "WO-004", "title": "CCTV install East Zone", "zone": "East",    "urgency": 5, "deadline": "2026-04-30", "crew": "Crew Delta", "status": "Pending",     "description": "4 new CCTV cameras"}
+]

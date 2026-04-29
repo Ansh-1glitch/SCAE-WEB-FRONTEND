@@ -1,0 +1,20 @@
+[
+  {
+    "id": "u001",
+    "email": "admin@scae.gov.in",
+    "name": "City Commissioner",
+    "role": "admin"
+  },
+  {
+    "id": "u002",
+    "email": "citizen@scae.gov.in",
+    "name": "Public User",
+    "role": "citizen"
+  },
+  {
+    "id": "u003",
+    "email": "dept@scae.gov.in",
+    "name": "Dept. Officer",
+    "role": "dept"
+  }
+]

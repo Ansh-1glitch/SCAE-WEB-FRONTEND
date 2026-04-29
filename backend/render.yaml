@@ -1,0 +1,19 @@
+# render.yaml — Render.com deployment config
+# Docker environment use karo — gcc, make, java sab pre-installed hai
+
+services:
+  - type: web
+    name: scae-backend
+    env: docker
+    plan: free
+    rootDir: scae-backend
+    dockerfilePath: Dockerfile
+
+    # environment variables
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: FRONTEND_URL
+        value: https://bucolic-biscotti-dfb4d5.netlify.app
+      - key: JWT_SECRET
+        generateValue: true

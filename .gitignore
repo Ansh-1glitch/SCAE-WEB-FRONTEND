@@ -1,14 +1,21 @@
-# Python server (not needed for frontend deployment)
-server/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
+# Java compiled files
+*.class
+
+# C/C++ compiled binaries
+*.dll
+*.o
+*.exe
+
+# Node
+node_modules/
+
+# OS generated files
+.DS_Store
+Thumbs.db
 
 # VS Code
 .vscode/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Temp folders
+temp_daa_backend/
+server/
