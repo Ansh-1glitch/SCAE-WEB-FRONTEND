@@ -41,19 +41,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── Graph Data ──────────────────────────────────────────────────
 let NODES=[
-  {x:80,y:120,l:'Central Junction',area:'Central Junction'},
-  {x:220,y:200,l:'North Gate',area:'North Gate'},
-  {x:340,y:100,l:'City Hall',area:'City Hall'},
-  {x:480,y:180,l:'East Market',area:'East Market'},
-  {x:160,y:280,l:'West Park',area:'West Park'},
-  {x:320,y:300,l:'Downtown',area:'Downtown'},
-  {x:260,y:380,l:'South Bridge',area:'South Bridge'},
-  {x:420,y:360,l:'River Road',area:'River Road'},
-  {x:520,y:350,l:'Industrial Zone',area:'Industrial Zone'},
-  {x:300,y:220,l:'Medical Hub',area:'Medical Hub'},
-  {x:460,y:290,l:'Tech District',area:'Tech District'},
-  {x:120,y:380,l:'Old Town',area:'Old Town'},
-  {x:380,y:430,l:'Sports Complex',area:'Sports Complex'}
+  {id:0,  x:80, y:120,l:'Central Junction',area:'Central Junction',label:'Central Junction'},
+  {id:1,  x:220,y:200,l:'North Gate',      area:'North Gate',      label:'North Gate'},
+  {id:2,  x:340,y:100,l:'City Hall',       area:'City Hall',       label:'City Hall'},
+  {id:3,  x:480,y:180,l:'East Market',     area:'East Market',     label:'East Market'},
+  {id:4,  x:160,y:280,l:'West Park',       area:'West Park',       label:'West Park'},
+  {id:5,  x:320,y:300,l:'Downtown',        area:'Downtown',        label:'Downtown'},
+  {id:6,  x:260,y:380,l:'South Bridge',    area:'South Bridge',    label:'South Bridge'},
+  {id:7,  x:420,y:360,l:'River Road',      area:'River Road',      label:'River Road'},
+  {id:8,  x:520,y:350,l:'Industrial Zone', area:'Industrial Zone', label:'Industrial Zone'},
+  {id:9,  x:300,y:220,l:'Medical Hub',     area:'Medical Hub',     label:'Medical Hub'},
+  {id:10, x:460,y:290,l:'Tech District',   area:'Tech District',   label:'Tech District'},
+  {id:11, x:120,y:380,l:'Old Town',        area:'Old Town',        label:'Old Town'},
+  {id:12, x:380,y:430,l:'Sports Complex',  area:'Sports Complex',  label:'Sports Complex'}
 ];
 let EDGES=[
   [0,1,3],[0,4,4],[1,2,5],[1,4,2],[1,9,6],[2,3,4],[2,9,3],
@@ -82,7 +82,22 @@ function showPanel(id){
 }
 document.querySelectorAll('.nav-item').forEach(n=>{n.addEventListener('click',()=>showPanel(n.dataset.panel));});
 
-function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type==='error'?' error':'')+' show';setTimeout(()=>t.classList.remove('show'),3000);}
+function showToast(msg, type='success') {
+    let t = document.getElementById('toast');
+    if (!t) {
+        // citizen.html has no toast element — create one on the fly
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:4px;font-size:13px;font-family:Arial,sans-serif;z-index:9999;max-width:400px;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:opacity .3s;color:#fff;';
+        document.body.appendChild(t);
+    }
+    t.style.background = type === 'error' ? '#b91c1c' : '#2E7D32';
+    t.textContent = msg;
+    t.style.opacity = '1';
+    t.style.display = 'block';
+    clearTimeout(t._scaeTimer);
+    t._scaeTimer = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 3500);
+}
 function openModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 document.getElementById('modal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
@@ -109,7 +124,9 @@ function drawMap(svgId,hlEdges=[],hlNodes=[],hopMap={}){
     dst.add(new Option(n.area,i));
   });
   dst.selectedIndex=N-1;
-  MapEngine.init('route-map', ROUTE_OPTS);
+  // Use renderCityMap (not MapEngine) so SVG elements get the
+  // id-based structure that animatePath() needs to highlight routes.
+  renderCityMap(NODES, EDGES, 'route-map');
   const loc=document.getElementById('fc-loc');
   if(loc) NODES.forEach(n=>loc.add(new Option(n.area,n.l)));
   const bs=document.getElementById('bfs-src');
@@ -434,8 +451,9 @@ function renderCityMap(nodes, edges, svgId) {
     const H = svg.clientHeight || svg.getAttribute('height') || 520;
     const PAD = 70;
     
-    const MIN_X = 100, MAX_X = 520;
-    const MIN_Y = 80,  MAX_Y = 380;
+    // Coordinate range covers ALL local node positions (x:80–520, y:100–430)
+    const MIN_X = 80,  MAX_X = 520;
+    const MIN_Y = 100, MAX_Y = 430;
     
     function sx(x) { return PAD + ((x - MIN_X) / (MAX_X - MIN_X)) * (W - 2*PAD); }
     function sy(y) { return PAD + ((y - MIN_Y) / (MAX_Y - MIN_Y)) * (H - 2*PAD); }
